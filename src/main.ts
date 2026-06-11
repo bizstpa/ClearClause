@@ -1,7 +1,9 @@
 import './style.css';
 import { detectors, runDetectors } from './detectors/registry';
-import type { Category, DetectorResult } from './detectors/types';
+import type { Category, DetectorResult, Severity } from './detectors/types';
 import { strings as t } from './strings';
+
+const SEVERITY_ORDER: Severity[] = ['info', 'caution', 'warning'];
 
 interface State {
   text: string;
@@ -71,6 +73,15 @@ function render(): void {
 function renderResult(result: DetectorResult): HTMLElement {
   const detector = detectorByCategory.get(result.category)!;
 
+  // The card badge shows the highest severity among matches; matches may
+  // override the detector's base severity (e.g. sensitive data categories).
+  const severityOf = (m: { severity?: Severity }) => m.severity ?? detector.severity;
+  const cardSeverity = result.matches.reduce<Severity>(
+    (top, m) =>
+      SEVERITY_ORDER.indexOf(severityOf(m)) > SEVERITY_ORDER.indexOf(top) ? severityOf(m) : top,
+    detector.severity,
+  );
+
   const card = el('article', { class: `result ${result.found ? 'is-found' : ''}` });
   const head = el('div', { class: 'result-head' });
   head.append(
@@ -82,9 +93,7 @@ function renderResult(result: DetectorResult): HTMLElement {
     ),
   );
   if (result.found) {
-    head.append(
-      el('span', { class: `badge badge-${detector.severity}` }, t.severity[detector.severity]),
-    );
+    head.append(el('span', { class: `badge badge-${cardSeverity}` }, t.severity[cardSeverity]));
   }
   card.append(head);
 
@@ -95,6 +104,11 @@ function renderResult(result: DetectorResult): HTMLElement {
     const list = el('ul', { class: 'matches' });
     for (const match of result.matches) {
       const item = el('li');
+      if (match.severity) {
+        item.append(
+          el('span', { class: `badge badge-${match.severity} match-severity` }, t.severity[match.severity]),
+        );
+      }
       item.append(el('blockquote', {}, match.sentence));
       list.append(item);
     }

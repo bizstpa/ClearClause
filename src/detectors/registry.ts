@@ -1,11 +1,21 @@
 import type { Category, Detector, DetectorResult } from './types';
+import { dataCollection } from './data-collection';
 import { dataSale } from './data-sale';
+import { thirdPartySharing } from './third-party-sharing';
+import { retention } from './retention';
 import { arbitration } from './arbitration';
 import { classActionWaiver } from './class-action-waiver';
 
 // The single registration point: a new detector is one new file plus one
 // entry here. See CLAUDE.md "Architecture rules".
-export const detectors: readonly Detector[] = [dataSale, arbitration, classActionWaiver];
+export const detectors: readonly Detector[] = [
+  dataCollection,
+  dataSale,
+  thirdPartySharing,
+  retention,
+  arbitration,
+  classActionWaiver,
+];
 
 /** Run every registered detector and aggregate matches by category. */
 export function runDetectors(text: string): DetectorResult[] {

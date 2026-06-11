@@ -169,6 +169,10 @@ textarea:focus-visible,
   padding: 0;
 }
 
+.match-severity {
+  font-size: 0.7rem;
+}
+
 .matches blockquote {
   margin: 0.4rem 0;
   padding: 0.4rem 0.75rem;

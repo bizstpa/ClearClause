@@ -12,6 +12,8 @@ export interface Match {
   detectorId: string;
   sentence: string; // the matched sentence, verbatim, for display
   index: number; // character offset in the source text
+  /** Per-match severity override; defaults to the detector's severity. */
+  severity?: Severity;
 }
 
 export interface DetectorResult {

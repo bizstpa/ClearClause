@@ -43,10 +43,22 @@ describe('detectors against a real policy excerpt', () => {
     expect(sentences.some((s) => s.includes('pursued by you on an individual basis'))).toBe(true);
   });
 
-  it('does not flag ordinary data-collection sentences', () => {
-    const all = Object.values(results).flatMap((r) => r.matches.map((m) => m.sentence));
-    expect(all.some((s) => s.includes('We automatically collect certain information'))).toBe(false);
-    expect(all.some((s) => s.includes('Account information, such as date of birth'))).toBe(false);
+  it('routes ordinary data-collection sentences to data_collection as info, nowhere else', () => {
+    const collection = results.data_collection.matches;
+    expect(
+      collection.some((m) => m.sentence.includes('We automatically collect certain information')),
+    ).toBe(true);
+    expect(collection.every((m) => m.severity === 'info')).toBe(true);
+
+    const others = Object.values(results)
+      .filter((r) => r.category !== 'data_collection' && r.category !== 'third_party_sharing')
+      .flatMap((r) => r.matches.map((m) => m.sentence));
+    expect(others.some((s) => s.includes('We automatically collect certain information'))).toBe(
+      false,
+    );
+    expect(others.some((s) => s.includes('Account information, such as date of birth'))).toBe(
+      false,
+    );
   });
 
   it('match indexes point at the quoted sentence in the source', () => {

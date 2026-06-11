@@ -27,6 +27,7 @@ interface Match {
   detectorId: string;
   sentence: string;   // the matched sentence, verbatim, for display
   index: number;      // character offset in the source text
+  severity?: Severity; // per-match override; defaults to the detector's severity
 }
 
 interface DetectorResult {
@@ -56,9 +57,9 @@ Each reports `found` plus the sentences that triggered it. Detectors flag *candi
 - **data_sale** — language indicating personal data is or may be sold. Handle negation: "we do not sell…" is a different finding from "we sell…". V1 may surface both but must never label a no-sale sentence as a sale. When uncertain, surface the sentence under a neutral "mentions selling data" framing rather than asserting it.
 - **arbitration** — binding/mandatory arbitration clauses ("binding arbitration", "resolved through arbitration", "waive your right to … court").
 - **class_action_waiver** — waiver of class/collective action ("class action waiver", "on an individual basis", "not as a … class").
-- **third_party_sharing** — sharing/disclosure of data with third parties, partners, affiliates, advertisers.
-- **data_collection** — categories of data collected (location, contacts, device identifiers, biometrics, browsing).
-- **retention** — how long data is kept; flag both explicit periods and vague/indefinite language ("as long as necessary", "indefinitely").
+- **third_party_sharing** — sharing/disclosure of data with third parties, partners, affiliates, advertisers, plus business-transfer and cross-border transfer language.
+- **data_collection** — categories of data collected, severity-ranked per match: ordinary fields (name, email, device identifiers) are `info`; sensitive items (SSN, government IDs, financial/medical information, protected classifications, biometrics, precise geolocation, session-replay/keystroke capture, profiling/inferences) are `warning`.
+- **retention** — how long data is kept; vague/indefinite language ("as long as necessary", "duration of our relationship") is the concern (`caution`), while specific periods ("twelve (12) months") are reported as informative (`info`).
 
 ## Readout
 For each category: found / not found, severity, and a count of matched sentences, with the sentences expandable beneath. The readout is a screening aid, not legal advice; a short disclaimer to that effect is always visible.
