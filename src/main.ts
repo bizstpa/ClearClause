@@ -1,16 +1,15 @@
 import './style.css';
 import { detectors, runDetectors } from './detectors/registry';
 import type { Category, DetectorResult } from './detectors/types';
-import { locales, type UiLang } from './i18n';
+import { strings as t } from './strings';
 
 interface State {
-  lang: UiLang;
   text: string;
   results: DetectorResult[] | null;
   emptyWarning: boolean;
 }
 
-const state: State = { lang: 'en', text: '', results: null, emptyWarning: false };
+const state: State = { text: '', results: null, emptyWarning: false };
 
 // One detector per category in V1; used to look up label + severity for display.
 const detectorByCategory = new Map<Category, (typeof detectors)[number]>(
@@ -20,21 +19,12 @@ const detectorByCategory = new Map<Category, (typeof detectors)[number]>(
 const app = document.querySelector<HTMLDivElement>('#app')!;
 
 function render(): void {
-  const t = locales[state.lang];
-  document.documentElement.lang = t.htmlLang;
-  document.documentElement.dir = t.dir;
   document.title = `${t.title} — ${t.tagline}`;
 
   app.replaceChildren();
 
   const header = el('header');
-  const switcher = el('button', { class: 'lang-switch', type: 'button' }, t.switchTo);
-  switcher.setAttribute('aria-label', t.switchLabel);
-  switcher.addEventListener('click', () => {
-    state.lang = state.lang === 'en' ? 'ar' : 'en';
-    render();
-  });
-  header.append(el('h1', {}, t.title), switcher);
+  header.append(el('h1', {}, t.title));
 
   const intro = el('p', { class: 'tagline' }, t.tagline);
   const privacy = el('p', { class: 'privacy-note' }, t.privacyNote);
@@ -67,9 +57,6 @@ function render(): void {
     results.append(el('p', { class: 'empty-warning' }, t.emptyInput));
   } else if (state.results) {
     results.append(el('h2', {}, t.resultsHeading));
-    if (state.lang === 'ar') {
-      results.append(el('p', { class: 'coverage-note' }, t.arabicCoverageNote));
-    }
     for (const result of state.results) {
       results.append(renderResult(result));
     }
@@ -82,13 +69,12 @@ function render(): void {
 }
 
 function renderResult(result: DetectorResult): HTMLElement {
-  const t = locales[state.lang];
   const detector = detectorByCategory.get(result.category)!;
 
   const card = el('article', { class: `result ${result.found ? 'is-found' : ''}` });
   const head = el('div', { class: 'result-head' });
   head.append(
-    el('h3', {}, detector.label[state.lang]),
+    el('h3', {}, detector.label),
     el(
       'span',
       { class: `badge ${result.found ? 'badge-found' : 'badge-not-found'}` },

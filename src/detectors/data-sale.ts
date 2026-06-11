@@ -12,8 +12,6 @@ const POSITIVE = [
   // Disclosure-table phrasing: 'Personal Information ... disclosed, and/or "sold"'.
   /\bpersonal\s+(?:data|information)\b[^]{0,120}?\b(?:sold|selling)\b/i,
   /["“‘'](?:sold|sell|selling)["”’']\s+or\s+["“‘'](?:shared|sharing|share)["”’']/i,
-  // Arabic starter set — see SPEC.md; coverage is intentionally narrow for V1.
-  /(?:نبيع|يبيع|تبيع|ببيع|بيع)\s*(?:ال)?(?:بيانات|معلومات)/,
 ];
 
 // A sentence matching any of these is a no-sale statement (or otherwise not a
@@ -27,15 +25,12 @@ const NEGATION = [
   /\bwithout\s+selling\b/i,
   /\bno\s+sale\s+of\b/i,
   /\b(?:is|are|was|were)\s+not\s+(?:[a-z]+\s+){0,2}?sold\b/i,
-  // Arabic starter set.
-  /(?:لا|لن|لم)\s+(?:نبيع|يبيع|تبيع|نقوم\s+ببيع)/,
-  /عدم\s+بيع/,
 ];
 
 export const dataSale: Detector = {
   id: 'data_sale',
   category: 'data_sale',
-  label: { en: 'Language about selling data', ar: 'عبارات حول بيع البيانات' },
+  label: 'Language about selling data',
   severity: 'warning',
   detect(text) {
     return findMatches(text, 'data_sale', POSITIVE, NEGATION);

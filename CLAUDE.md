@@ -3,7 +3,7 @@
 Instructions for any Claude Code session working in this repo. Read this fully before editing anything.
 
 ## What this project is
-A bilingual (English + Arabic) Privacy Policy Analyzer. A user pastes a privacy policy or app terms into the page and gets back a structured, plain-language readout plus the specific sentences that triggered each flag (data collected, data sale, third-party sharing, retention, binding arbitration, class-action waiver).
+An English-language Privacy Policy Analyzer. A user pastes a privacy policy or app terms into the page and gets back a structured, plain-language readout plus the specific sentences that triggered each flag (data collected, data sale, third-party sharing, retention, binding arbitration, class-action waiver).
 
 ## Non-negotiable constraints
 - **Runs entirely in the browser.** V1 has no backend, no server, no API key, and makes **zero network calls during analysis**. The pasted text must never leave the user's machine. This is the product's core promise — do not break it, not even "temporarily" or "just for testing."
@@ -20,7 +20,7 @@ A bilingual (English + Arabic) Privacy Policy Analyzer. A user pastes a privacy 
 ## Architecture rules
 - **The detector engine is isolated.** All detection logic lives under `src/detectors/` and has **no dependency on the DOM or any UI code**. Detectors are pure functions: text in, structured results out. This isolation is deliberate — it lets the same engine later be wrapped in a Chrome extension or swapped behind an LLM without a rewrite. Never import UI modules into detector code.
 - **Uniform detector contract.** Every detector implements the shared `Detector` interface (see SPEC.md). Adding a new check means adding one file that exports a `Detector` and registering it in one place. No special-casing.
-- **i18n is data, not branching.** All user-facing strings come from a locale object keyed by `en` / `ar`. No hardcoded English in the UI. The page toggles `dir="rtl"` for Arabic.
+- **UI strings are data.** All user-facing strings live in one strings module (`src/strings.ts`), not scattered through UI code. The product is English-only for now; if other languages return later, that module is the seam.
 
 ## How to work in this repo
 - Make small, reviewable commits with clear messages (conventional-commits style: `feat:`, `fix:`, `test:`, `docs:`, `chore:`). The commit history is part of the deliverable here, so no giant catch-all commits.

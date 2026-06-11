@@ -14,15 +14,12 @@ const POSITIVE = [
   /\b(?:claims?|disputes?|proceed(?:ings?)?|arbitrations?|actions?)\b[^]{0,160}?\bindividual\s+basis\b/i,
   /\bindividual\s+basis\b[^]{0,80}?\b(?:claims?|disputes?|class|collective|representative)\b/i,
   /\bclass\s+or\s+collective\s+actions?\b/i,
-  // Arabic starter set — see SPEC.md.
-  /دعوى\s+جماعية|الدعاوى\s+الجماعية/,
-  /بصفة\s+فردية|على\s+أساس\s+فردي/,
 ];
 
 export const classActionWaiver: Detector = {
   id: 'class_action_waiver',
   category: 'class_action_waiver',
-  label: { en: 'Language about class-action waiver', ar: 'عبارات حول التنازل عن الدعاوى الجماعية' },
+  label: 'Language about class-action waiver',
   severity: 'warning',
   detect(text) {
     return findMatches(text, 'class_action_waiver', POSITIVE);

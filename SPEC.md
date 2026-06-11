@@ -6,7 +6,7 @@ The durable product + technical spec for V1. CLAUDE.md governs *how* to build; t
 Paste a privacy policy and get (1) a structured readout of what the policy does on a handful of high-stakes dimensions, and (2) the exact sentences that triggered each finding, so the user can read the source language themselves.
 
 ## User flow
-1. User opens the page (English or Arabic, RTL-aware).
+1. User opens the page (English-only).
 2. User pastes policy text into a textarea and clicks Analyze.
 3. Analysis runs synchronously, in-browser. No network call.
 4. Results render: a readout summary at the top, then per-category flagged sentences below, each quoting the matched sentence verbatim.
@@ -38,7 +38,7 @@ interface DetectorResult {
 interface Detector {
   id: string;
   category: Category;
-  label: { en: string; ar: string };
+  label: string;
   severity: Severity;
   detect(text: string): Match[];
 }
@@ -46,10 +46,9 @@ interface Detector {
 A detector is a pure function — text in, matches out. No DOM, no network, no shared mutable state. The engine runs every registered detector and aggregates results by category into the readout.
 
 ## Sentence segmentation
-Detectors quote whole sentences, so the engine needs a shared `segmentSentences(text, lang)` helper.
-- English: split on `.`, `?`, `!` with handling for common false breaks ("U.S.", "e.g.", "Inc.").
-- Arabic: handle the Arabic full stop plus `؟` (Arabic question mark) and `،` / `؛` as soft separators. Arabic is RTL and may carry diacritics — match on normalized text but display the original.
-- Keep this in one util so both languages and all detectors share it.
+Detectors quote whole sentences, so the engine needs a shared `segmentSentences(text)` helper.
+- Split on `.`, `?`, `!` with handling for common false breaks ("U.S.", "e.g.", "Inc.").
+- Keep this in one util so all detectors share it.
 
 ## V1 detectors
 Each reports `found` plus the sentences that triggered it. Detectors flag *candidate* language for the user to read; they do not assert a legal conclusion, and the readout wording reflects that.
@@ -61,14 +60,12 @@ Each reports `found` plus the sentences that triggered it. Detectors flag *candi
 - **data_collection** — categories of data collected (location, contacts, device identifiers, biometrics, browsing).
 - **retention** — how long data is kept; flag both explicit periods and vague/indefinite language ("as long as necessary", "indefinitely").
 
-Each detector ships with a small Arabic pattern set, clearly marked as a starter set. The README states Arabic coverage is still growing — do not overstate parity.
-
 ## Readout
 For each category: found / not found, severity, and a count of matched sentences, with the sentences expandable beneath. The readout is a screening aid, not legal advice; a short disclaimer to that effect is always visible.
 
-## UI / i18n
-- Bilingual EN/AR with a language switcher; `dir="rtl"` and correct alignment when Arabic is active.
-- All strings from a locale object; nothing hardcoded.
+## UI
+- English-only.
+- All strings from a single strings module; nothing hardcoded in UI code.
 - Plain, legible, no branding needed for V1. Accessible contrast and keyboard operability.
 
 ## Testing

@@ -1,5 +1,3 @@
-export type Lang = 'en' | 'ar';
-
 export interface SentenceSpan {
   sentence: string; // trimmed sentence text, verbatim otherwise
   index: number; // character offset of the sentence start in the source text
@@ -33,29 +31,15 @@ const ABBREVIATIONS = new Set([
   'para',
 ]);
 
-const TERMINATORS_EN = '.!?';
-// Arabic question mark, Arabic-script full stop, plus Latin terminators
-// (Arabic policies routinely use the Latin period). '؛' (semicolon) is
-// treated as a soft separator so detector quotes stay short.
-const TERMINATORS_AR = '.!؟۔؛';
+const TERMINATORS = '.!?';
 
-/**
- * Crude language sniff used by detectors, which receive plain text with no
- * language tag: whichever script dominates wins.
- */
-export function detectLang(text: string): Lang {
-  const arabic = (text.match(/[؀-ۿ]/g) ?? []).length;
-  const latin = (text.match(/[A-Za-z]/g) ?? []).length;
-  return arabic > latin ? 'ar' : 'en';
-}
-
-export function segmentSentences(text: string, lang: Lang): SentenceSpan[] {
+export function segmentSentences(text: string): SentenceSpan[] {
   // Paragraph breaks (blank lines) are hard boundaries, so headings and list
   // items pasted from real pages don't glue onto the following sentence.
   const spans: SentenceSpan[] = [];
   let blockStart = 0;
   const emitBlock = (end: number) => {
-    for (const span of segmentBlock(text.slice(blockStart, end), lang)) {
+    for (const span of segmentBlock(text.slice(blockStart, end))) {
       spans.push({ sentence: span.sentence, index: span.index + blockStart });
     }
   };
@@ -67,12 +51,7 @@ export function segmentSentences(text: string, lang: Lang): SentenceSpan[] {
   return spans;
 }
 
-function segmentBlock(text: string, lang: Lang): SentenceSpan[] {
-  // SEAM(ar): Arabic gets only this starter pass for V1 — terminator
-  // characters differ, but there is no diacritic normalization, no '،'
-  // soft-separator handling, and no Arabic abbreviation list yet.
-  // See SPEC.md "Sentence segmentation" before extending.
-  const terminators = lang === 'ar' ? TERMINATORS_AR : TERMINATORS_EN;
+function segmentBlock(text: string): SentenceSpan[] {
   const spans: SentenceSpan[] = [];
   let start = 0;
 
@@ -85,12 +64,12 @@ function segmentBlock(text: string, lang: Lang): SentenceSpan[] {
   };
 
   for (let i = 0; i < text.length; i++) {
-    if (!terminators.includes(text[i])) continue;
-    if (lang === 'en' && text[i] === '.' && isFalseBreak(text, i)) continue;
+    if (!TERMINATORS.includes(text[i])) continue;
+    if (text[i] === '.' && isFalseBreak(text, i)) continue;
 
     // Consume runs of terminators ("...", "?!") and trailing close-quotes.
     let end = i + 1;
-    while (end < text.length && (terminators.includes(text[end]) || '"”’)'.includes(text[end]))) {
+    while (end < text.length && (TERMINATORS.includes(text[end]) || '"”’)'.includes(text[end]))) {
       end++;
     }
     push(start, end);

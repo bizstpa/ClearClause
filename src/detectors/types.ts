@@ -23,7 +23,7 @@ export interface DetectorResult {
 export interface Detector {
   id: string;
   category: Category;
-  label: { en: string; ar: string };
+  label: string;
   severity: Severity;
   detect(text: string): Match[];
 }

@@ -27,10 +27,4 @@ describe('class_action_waiver detector', () => {
       classActionWaiver.detect('We offer a class of premium features for subscribers.'),
     ).toHaveLength(0);
   });
-
-  it('handles the Arabic starter patterns', () => {
-    expect(
-      classActionWaiver.detect('توافق على عدم المشاركة في أي دعوى جماعية ضد الشركة.'),
-    ).toHaveLength(1);
-  });
 });

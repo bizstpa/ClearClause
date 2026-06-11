@@ -1,6 +1,6 @@
 # ClearClause — Privacy Policy Analyzer
 
-ClearClause is a bilingual (English + Arabic) privacy policy analyzer. Paste a privacy policy or app terms into the page and get back a structured, plain-language readout of what the document says on a handful of high-stakes dimensions — data collected, data sale, third-party sharing, retention, binding arbitration, class-action waivers — along with the exact sentences that triggered each flag, so you can read the source language yourself.
+ClearClause is a privacy policy analyzer. Paste a privacy policy or app terms into the page and get back a structured, plain-language readout of what the document says on a handful of high-stakes dimensions — data collected, data sale, third-party sharing, retention, binding arbitration, class-action waivers — along with the exact sentences that triggered each flag, so you can read the source language yourself.
 
 ## Privacy promise
 
@@ -17,5 +17,3 @@ MIT — see [LICENSE](LICENSE).
 ## Status
 
 **Status: in development.** Live at: <https://bizstpa.github.io/ClearClause/>
-
-Arabic detection coverage is a starter set and still growing; English coverage is further along.

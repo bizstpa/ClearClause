@@ -23,10 +23,4 @@ describe('arbitration detector', () => {
     ).toHaveLength(0);
     expect(arbitration.detect('Our office is near the courthouse.')).toHaveLength(0);
   });
-
-  it('handles the Arabic starter patterns', () => {
-    expect(
-      arbitration.detect('تتم تسوية أي نزاع عن طريق التحكيم الملزم وفقاً لهذه الشروط.'),
-    ).toHaveLength(1);
-  });
 });

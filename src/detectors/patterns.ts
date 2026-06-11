@@ -1,5 +1,5 @@
 import type { Match } from './types';
-import { detectLang, segmentSentences } from './segment';
+import { segmentSentences } from './segment';
 
 /**
  * Shared matcher used by all pattern-based detectors: segment the text,
@@ -15,7 +15,7 @@ export function findMatches(
   veto: readonly RegExp[] = [],
 ): Match[] {
   const matches: Match[] = [];
-  for (const { sentence, index } of segmentSentences(text, detectLang(text))) {
+  for (const { sentence, index } of segmentSentences(text)) {
     if (!positive.some((p) => p.test(sentence))) continue;
     if (veto.some((v) => v.test(sentence))) continue;
     matches.push({ detectorId, sentence, index });

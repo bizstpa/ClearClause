@@ -38,9 +38,4 @@ describe('data_sale detector', () => {
     expect(matches).toHaveLength(1);
     expect(matches[0].sentence).toContain('after a merger');
   });
-
-  it('handles the Arabic starter patterns', () => {
-    expect(dataSale.detect('قد نقوم ببيع بياناتك الشخصية لأطراف ثالثة.')).toHaveLength(1);
-    expect(dataSale.detect('نحن لا نبيع بياناتك الشخصية.')).toHaveLength(0);
-  });
 });
