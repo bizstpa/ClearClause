@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { dataSale } from './data-sale';
+import { iherbRightsSentences, iherbSaleParagraph } from './fixtures/iherb';
 
 describe('data_sale detector', () => {
   it('flags an explicit sale sentence and quotes it verbatim', () => {
@@ -37,5 +38,54 @@ describe('data_sale detector', () => {
     );
     expect(matches).toHaveLength(1);
     expect(matches[0].sentence).toContain('after a merger');
+  });
+
+  describe('consideration-aware (iHerb two-step)', () => {
+    it('catches the non-monetary consideration sentence but not the monetary denial', () => {
+      const sentences = dataSale.detect(iherbSaleParagraph).map((m) => m.sentence);
+      expect(sentences.some((s) => s.includes('non-monetary consideration'))).toBe(true);
+      expect(
+        sentences.some((s) =>
+          s.includes('We do not sell Personal Information in exchange for monetary compensation'),
+        ),
+      ).toBe(false);
+    });
+
+    it('catches the "we may have sold the following categories" assertion', () => {
+      const sentences = dataSale.detect(iherbSaleParagraph).map((m) => m.sentence);
+      expect(sentences.some((s) => s.includes('may have sold the following categories'))).toBe(
+        true,
+      );
+    });
+
+    it('catches a deny-then-consideration two-step packed into one sentence', () => {
+      const matches = dataSale.detect(
+        'We do not sell personal information in exchange for monetary compensation; however, we may allow certain third parties to collect your personal information on our sites in exchange for non-monetary consideration.',
+      );
+      expect(matches).toHaveLength(1);
+    });
+
+    it('still treats a denial covering any consideration as a denial', () => {
+      expect(
+        dataSale.detect('We do not sell your personal information in exchange for any consideration.'),
+      ).toHaveLength(0);
+    });
+  });
+
+  describe('rights-aware', () => {
+    it('does not flag sentences about the right to opt out of sale', () => {
+      expect(dataSale.detect(iherbRightsSentences)).toHaveLength(0);
+    });
+
+    it('does not flag the Do Not Sell My Personal Information link text', () => {
+      expect(dataSale.detect('Do Not Sell My Personal Information')).toHaveLength(0);
+    });
+
+    it('still flags assertions when rights sentences surround them', () => {
+      const text = `${iherbRightsSentences}\n${iherbSaleParagraph}`;
+      const sentences = dataSale.detect(text).map((m) => m.sentence);
+      expect(sentences.some((s) => s.includes('non-monetary consideration'))).toBe(true);
+      expect(sentences.some((s) => s.includes('right to opt-out'))).toBe(false);
+    });
   });
 });
