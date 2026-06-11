@@ -33,21 +33,28 @@ const ABBREVIATIONS = new Set([
 
 const TERMINATORS = '.!?';
 
+// Leading list markers ("•", "- ", "1.", "(a)") are layout, not sentence
+// text; they are skipped so quotes start at the words and a numbered
+// marker's period is never mistaken for a sentence end.
+const LIST_MARKER = /^[^\S\n]*(?:[•◦▪‣·]|[-–—*]|\(?\d{1,3}[.)])\s+/;
+
 export function segmentSentences(text: string): SentenceSpan[] {
-  // Paragraph breaks (blank lines) are hard boundaries, so headings and list
-  // items pasted from real pages don't glue onto the following sentence.
+  // Line breaks are hard sentence boundaries. List items, table cells, and
+  // headings in real policies often carry no terminal punctuation, so once
+  // flattened to plain text they would otherwise merge into one giant
+  // "sentence". A matched unit should read as one line, not a section.
   const spans: SentenceSpan[] = [];
-  let blockStart = 0;
-  const emitBlock = (end: number) => {
-    for (const span of segmentBlock(text.slice(blockStart, end))) {
-      spans.push({ sentence: span.sentence, index: span.index + blockStart });
+  let lineStart = 0;
+  for (let i = 0; i <= text.length; i++) {
+    if (i < text.length && text[i] !== '\n') continue;
+    const line = text.slice(lineStart, i);
+    const marker = line.match(LIST_MARKER);
+    const offset = lineStart + (marker ? marker[0].length : 0);
+    for (const span of segmentBlock(marker ? line.slice(marker[0].length) : line)) {
+      spans.push({ sentence: span.sentence, index: span.index + offset });
     }
-  };
-  for (const sep of text.matchAll(/\n[^\S\n]*\n\s*/g)) {
-    emitBlock(sep.index);
-    blockStart = sep.index + sep[0].length;
+    lineStart = i + 1;
   }
-  emitBlock(text.length);
   return spans;
 }
 
