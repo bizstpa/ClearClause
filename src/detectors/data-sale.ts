@@ -58,6 +58,9 @@ const NEGATION = [
   /\bwithout\s+selling\b/i,
   /\bno\s+sale\s+of\b/i,
   /\b(?:is|are|was|were)\s+not\s+(?:[a-z]+\s+){0,2}?sold\b/i,
+  // Selling the business, not the data: "sell or transfer all or a portion
+  // of our business or assets" belongs to third_party_sharing.
+  /\bsell\s+or\s+transfer\b[^]{0,80}?\b(?:business|assets)\b/i,
 ];
 
 export const dataSale: Detector = {
