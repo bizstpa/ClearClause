@@ -5,6 +5,7 @@ const POSITIVE = [
   /\b(?:binding|mandatory|final)\s+arbitration\b/i,
   /\b(?:resolved?|settled?|decided)\b[^]{0,60}?\b(?:through|by|via|in)\s+(?:individual\s+)?arbitration\b/i,
   /\barbitration\s+(?:agreement|clause|provision)\b/i,
+  /\bagreement\s+to\s+arbitrate\b/i,
   /\bsubmit\b[^]{0,60}?\bto\s+arbitration\b/i,
   /\bwaiv(?:e|er|ing)\b[^]{0,80}?\b(?:right|rights)\b[^]{0,80}?\b(?:court|jury|judge|sue)\b/i,
   // Arabic starter set — see SPEC.md.

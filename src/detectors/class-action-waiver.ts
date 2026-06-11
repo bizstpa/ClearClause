@@ -9,7 +9,9 @@ const POSITIVE = [
   /\bno\s+(?:class|representative|collective)\s+(?:actions?|proceedings?|arbitrations?)\b/i,
   // "individual basis" only counts in a disputes context — policies use the
   // same phrase for innocent things ("requests are reviewed on an individual basis").
-  /\b(?:claims?|disputes?|proceed(?:ings?)?|arbitrations?|actions?)\b[^]{0,80}?\bindividual\s+basis\b/i,
+  // Window is wide (160) because real clauses ramble: "any Dispute ... may
+  // only be pursued by you on an individual basis" (Discord ToS).
+  /\b(?:claims?|disputes?|proceed(?:ings?)?|arbitrations?|actions?)\b[^]{0,160}?\bindividual\s+basis\b/i,
   /\bindividual\s+basis\b[^]{0,80}?\b(?:claims?|disputes?|class|collective|representative)\b/i,
   /\bclass\s+or\s+collective\s+actions?\b/i,
   // Arabic starter set — see SPEC.md.

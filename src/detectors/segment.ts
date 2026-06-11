@@ -50,6 +50,24 @@ export function detectLang(text: string): Lang {
 }
 
 export function segmentSentences(text: string, lang: Lang): SentenceSpan[] {
+  // Paragraph breaks (blank lines) are hard boundaries, so headings and list
+  // items pasted from real pages don't glue onto the following sentence.
+  const spans: SentenceSpan[] = [];
+  let blockStart = 0;
+  const emitBlock = (end: number) => {
+    for (const span of segmentBlock(text.slice(blockStart, end), lang)) {
+      spans.push({ sentence: span.sentence, index: span.index + blockStart });
+    }
+  };
+  for (const sep of text.matchAll(/\n[^\S\n]*\n\s*/g)) {
+    emitBlock(sep.index);
+    blockStart = sep.index + sep[0].length;
+  }
+  emitBlock(text.length);
+  return spans;
+}
+
+function segmentBlock(text: string, lang: Lang): SentenceSpan[] {
   // SEAM(ar): Arabic gets only this starter pass for V1 — terminator
   // characters differ, but there is no diacritic normalization, no '،'
   // soft-separator handling, and no Arabic abbreviation list yet.
