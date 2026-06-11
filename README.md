@@ -16,4 +16,6 @@ MIT — see [LICENSE](LICENSE).
 
 ## Status
 
-**Status: in development.** Live URL: _coming soon_.
+**Status: in development.** Live at: <https://bizstpa.github.io/ClearClause/>
+
+Arabic detection coverage is a starter set and still growing; English coverage is further along.
