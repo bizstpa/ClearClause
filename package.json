@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "eval": "vite-node scripts/eval.ts"
+    "eval": "vite-node scripts/eval.ts",
+    "eval:misses": "vite-node scripts/eval-misses.ts"
   },
   "devDependencies": {
     "typescript": "^5.8.0",
