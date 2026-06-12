@@ -48,6 +48,35 @@ describe('third_party_sharing detector', () => {
     ).toHaveLength(1);
   });
 
+  it('flags a denial qualified by an exception carve-out', () => {
+    expect(
+      thirdPartySharing.detect(
+        'We do not share your personal information with companies, organizations, or individuals outside of Google except in the following cases:',
+      ),
+    ).toHaveLength(1);
+    expect(
+      thirdPartySharing.detect(
+        'We will not disclose your personal data unless you have given us your consent.',
+      ),
+    ).toHaveLength(1);
+  });
+
+  it('flags a denial whose contrastive tail asserts sharing', () => {
+    expect(
+      thirdPartySharing.detect(
+        'We do not share your personal information for marketing; however, we may disclose it to our service providers.',
+      ),
+    ).toHaveLength(1);
+  });
+
+  it('does not flag a denial whose contrastive tail is not about sharing', () => {
+    expect(
+      thirdPartySharing.detect(
+        'We do not share your personal information with third parties, but we work hard to keep it secure.',
+      ),
+    ).toHaveLength(0);
+  });
+
   it('does not flag no-sharing statements', () => {
     expect(
       thirdPartySharing.detect('We do not share your personal information with third parties.'),

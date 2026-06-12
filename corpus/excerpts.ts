@@ -132,6 +132,20 @@ Exercising the right to opt-out from a sale or sharing: We do not transfer your 
     },
   },
   {
+    name: 'google-sharing-denial-with-exceptions',
+    source: 'verbatim sentence from Google Privacy Policy (2026-06-13) plus a composite flat denial',
+    text: `We do not share your personal information with companies, organizations, or individuals outside of Google except in the following cases:
+We do not share your personal information with third parties.`,
+    mustFind: {
+      // The "except ..." carve-out IS the sharing disclosure.
+      third_party_sharing: ['except in the following cases'],
+    },
+    mustNotFind: {
+      // A flat denial with no carve-out stays suppressed.
+      third_party_sharing: ['with third parties.'],
+    },
+  },
+  {
     name: 'no-sharing-negation',
     source: 'composite no-sharing statement',
     text: 'We do not share your personal information with third parties, and we will never sell your data to anyone.',

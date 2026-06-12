@@ -1,5 +1,5 @@
-import type { Detector } from './types';
-import { findMatches } from './patterns';
+import type { Detector, Match } from './types';
+import { segmentSentences } from './segment';
 
 const POSITIVE = [
   // share/disclose verb + a recipient category in the same sentence
@@ -20,9 +20,50 @@ const POSITIVE = [
 
 const NEGATION = [
   /\b(?:do|does|did|will|shall|would)\s+not\s+(?:[a-z]+\s+){0,3}?(?:share|disclose|sell|transfer)\b/i,
-  /\b(?:don't|won't|doesn't|didn't)\s+(?:[a-z]+\s+){0,3}?(?:share|disclose|sell|transfer)\b/i,
+  /\b(?:don't|won't|doesn't|didn't|don’t|won’t|doesn’t|didn’t)\s+(?:[a-z]+\s+){0,3}?(?:share|disclose|sell|transfer)\b/i,
   /\bnever\s+(?:[a-z]+\s+){0,2}?(?:share|disclose|sell)\b/i,
 ];
+
+// A denial followed by an exception carve-out is not a denial — the carve-out
+// IS the disclosure ("we do not share ... except in the following cases").
+// Same contrastive-negation idea as data-sale.ts, split in two because the
+// introducers behave differently:
+//  - except/unless/other-than introduce exceptions to the denial itself, so
+//    their mere presence after the denial means sharing happens in some cases;
+//  - but/however/although start a new clause that only counts if it
+//    independently asserts sharing.
+// A flat denial with neither stays suppressed.
+const EXCEPTION = /\b(?:except|unless|other\s+than)\b/i;
+const CONTRAST = /\b(?:however|but|although|though|nevertheless|nonetheless)\b[,;:]?\s/i;
+
+// The denial must be about disclosing data (not e.g. "we do not share office
+// space") for its exception carve-out to count as a data disclosure.
+const DENIED_DATA_SHARING =
+  /\bnot\s+(?:[a-z]+\s+){0,3}?(?:share|disclose|sell|transfer)\b[^]{0,80}?\b(?:personal|your|user)\b[^]{0,40}?\b(?:data|information)\b|\bnever\s+(?:[a-z]+\s+){0,2}?(?:share|disclose|sell)\b[^]{0,80}?\b(?:personal|your|user)\b[^]{0,40}?\b(?:data|information)\b/i;
+
+function firstNegation(s: string): RegExpExecArray | null {
+  let earliest: RegExpExecArray | null = null;
+  for (const p of NEGATION) {
+    const m = p.exec(s);
+    if (m && (!earliest || m.index < earliest.index)) earliest = m;
+  }
+  return earliest;
+}
+
+function isSharingDisclosure(s: string): boolean {
+  const negation = firstNegation(s);
+  if (!negation) return POSITIVE.some((p) => p.test(s));
+
+  const tail = s.slice(negation.index + negation[0].length);
+  if (EXCEPTION.test(tail)) {
+    return DENIED_DATA_SHARING.test(s) || POSITIVE.some((p) => p.test(s));
+  }
+  const contrast = CONTRAST.exec(tail);
+  if (contrast) {
+    return POSITIVE.some((p) => p.test(tail.slice(contrast.index + contrast[0].length)));
+  }
+  return false;
+}
 
 export const thirdPartySharing: Detector = {
   id: 'third_party_sharing',
@@ -30,6 +71,12 @@ export const thirdPartySharing: Detector = {
   label: 'Language about sharing data with third parties',
   severity: 'caution',
   detect(text) {
-    return findMatches(text, 'third_party_sharing', POSITIVE, NEGATION);
+    const matches: Match[] = [];
+    for (const { sentence, index } of segmentSentences(text)) {
+      if (isSharingDisclosure(sentence)) {
+        matches.push({ detectorId: 'third_party_sharing', sentence, index });
+      }
+    }
+    return matches;
   },
 };
