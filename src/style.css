@@ -16,6 +16,7 @@
 
 body {
   margin: 0;
+  background: #fff;
   font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
   color: var(--ink);
   line-height: 1.6;
