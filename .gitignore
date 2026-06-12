@@ -1,6 +1,7 @@
 node_modules
 dist
 corpus/local/
+/*.txt
 .claude/
 *.local
 .DS_Store
