@@ -9,7 +9,10 @@ How the detector engine improves systematically instead of one policy at a time.
 
 ## Tuning workflow
 
-1. Copy a full policy's text into `corpus/local/<company>.txt`.
+1. Copy a full policy's text into `corpus/local/<company>.txt` — by hand, or with `npm run fetch -- <url> [name]`, which extracts the page's readable text for you. The fetcher fails loudly instead of writing junk when a page is JavaScript-rendered or bot-protected; paste manually in that case.
 2. Run `npm run eval` — it runs all detectors over every local policy plus the committed excerpts and prints a per-policy, per-category summary (match counts and a sample matched line each), so misses and over-flags are visible across the whole set at a glance.
-3. Tune patterns in `src/detectors/`.
-4. **Pin every fix:** add a short excerpt with `mustFind` / `mustNotFind` expectations to `excerpts.ts` so the fix can't silently regress. Then `npm test`.
+3. Run `npm run eval:misses` — it prints, per policy, every sentence that contains a sale, sharing, advertising, or retention keyword but was **not** flagged by a detector of the matching category. It is intentionally over-inclusive: most lines it prints are legitimate non-matches (business transfers, ad-buying, denials), and its job is to surface candidates for a human to judge so nothing important is silently dropped.
+4. Tune patterns in `src/detectors/`.
+5. **Pin every fix:** add a short excerpt with `mustFind` / `mustNotFind` expectations to `excerpts.ts` so the fix can't silently regress. Then `npm test`.
+
+A clean `eval:misses` run proves the engine handles the **current corpus**, nothing more. Tuning only against known fixtures is how a detector becomes confidently wrong — keep adding fresh, untuned policies by hand.
