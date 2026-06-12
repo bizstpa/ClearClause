@@ -72,6 +72,46 @@ describe('data_sale detector', () => {
     });
   });
 
+  describe('contrastive negation (Stripe deny-then-admit)', () => {
+    it('flags the disclosure after "but" despite the leading payment-qualified denial', () => {
+      const matches = dataSale.detect(
+        'We do not transfer your Personal Data to third parties in exchange for payment, but we may provide your data to third-party partners, such as advertising partners, who assist us in advertising our Services to you.',
+      );
+      expect(matches).toHaveLength(1);
+    });
+
+    it('still treats the denial as a denial when nothing follows the contrastive', () => {
+      expect(
+        dataSale.detect(
+          'We do not transfer your Personal Data to third parties in exchange for payment.',
+        ),
+      ).toHaveLength(0);
+    });
+
+    it('does not treat an unqualified deny-but-share sentence as a sale', () => {
+      expect(
+        dataSale.detect(
+          'We do not sell your personal information, but we share aggregate statistics with partners.',
+        ),
+      ).toHaveLength(0);
+    });
+  });
+
+  describe('scare-quoted keywords (Stripe CCPA admission)', () => {
+    it('matches "sale" in scare quotes the same as sale', () => {
+      const matches = dataSale.detect(
+        'Stripe’s provision of data to these parties may be considered a data “sale” or “sharing” (for behavioral advertising) as those terms are defined under the CCPA and other applicable US privacy laws.',
+      );
+      expect(matches).toHaveLength(1);
+    });
+
+    it('still suppresses a scare-quoted denial', () => {
+      expect(
+        dataSale.detect('We do not knowingly “sell” your personal information.'),
+      ).toHaveLength(0);
+    });
+  });
+
   describe('rights-aware', () => {
     it('does not flag sentences about the right to opt out of sale', () => {
       expect(dataSale.detect(iherbRightsSentences)).toHaveLength(0);
@@ -79,6 +119,14 @@ describe('data_sale detector', () => {
 
     it('does not flag the Do Not Sell My Personal Information link text', () => {
       expect(dataSale.detect('Do Not Sell My Personal Information')).toHaveLength(0);
+    });
+
+    it('does not flag a long rights sentence whose subject is the user (Stripe right-to-know)', () => {
+      expect(
+        dataSale.detect(
+          'You have a right to request additional information about the categories of personal information collected, sold, disclosed, or shared; purposes for which this personal information was collected, sold, or shared.',
+        ),
+      ).toHaveLength(0);
     });
 
     it('still flags assertions when rights sentences surround them', () => {

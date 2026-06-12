@@ -109,6 +109,29 @@ Your information may be transferred to, and processed in, countries other than t
     },
   },
   {
+    name: 'stripe-sale-constructions',
+    source: 'verbatim sentences from Stripe Privacy Policy (2026-06-13)',
+    text: `We do not transfer your Personal Data to third parties in exchange for payment, but we may provide your data to third-party partners, such as advertising partners, analytics providers, and social networks, who assist us in advertising our Services to you.
+Exercising the right to know: You have a right to request additional information about the categories of personal information collected, sold, disclosed, or shared; purposes for which this personal information was collected, sold, or shared; categories of sources of personal information; and categories of third parties with whom we disclosed or shared this personal information.
+Exercising the right to opt-out from a sale or sharing: We do not transfer your personal data to third parties in exchange for payment. However, as noted above, we may provide the data to third party partners, such as advertising partners, analytics providers, and social networks, who assist us in advertising our products and Services to you. Because these third parties may use the data Stripe provides for their own purposes, Stripe's provision of data to these parties may be considered a data “sale” or “sharing” (for behavioral advertising) as those terms are defined under the CCPA and other applicable US privacy laws.`,
+    mustFind: {
+      // Deny-then-admit: the disclosure after the contrastive survives the
+      // denial's veto. Scare-quoted CCPA admission: 'a data “sale”' matches.
+      data_sale: [
+        'in exchange for payment, but we may provide',
+        'may be considered a data “sale”',
+      ],
+    },
+    mustNotFind: {
+      // Rights sentence (subject is the user requesting) and the bare denial
+      // sentence are not sale assertions.
+      data_sale: [
+        'You have a right to request additional information',
+        'Exercising the right to opt-out from a sale or sharing',
+      ],
+    },
+  },
+  {
     name: 'no-sharing-negation',
     source: 'composite no-sharing statement',
     text: 'We do not share your personal information with third parties, and we will never sell your data to anyone.',
