@@ -86,6 +86,24 @@ function extractText(html: string): string {
     .trim();
 }
 
+// Some pages render the same notice into two containers (e.g. a visible copy
+// plus a print/SEO copy), which doubles every paragraph and inflates eval
+// counts ~2×. Drop exact-duplicate paragraph-length lines, keeping the first
+// occurrence. Short lines (headings, table cells, blanks) are left alone —
+// they legitimately repeat and carry little signal — so this is exact-block
+// dedup, not fuzzy.
+function dedupeBlocks(text: string): string {
+  const seen = new Set<string>();
+  const kept = text.split('\n').filter((line) => {
+    const key = line.trim();
+    if (key.length < 40) return true;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  return kept.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
 function fail(message: string): never {
   console.error(`\nExtraction failed: ${message}`);
   console.error('Nothing was written. Paste the policy text manually into corpus/local/<name>.txt instead.');
@@ -121,7 +139,7 @@ try {
   fail(`request failed (${err instanceof Error ? err.message : String(err)})`);
 }
 
-const text = extractText(html);
+const text = dedupeBlocks(extractText(html));
 const lower = text.slice(0, 4000).toLowerCase();
 const marker = BLOCK_MARKERS.find((m) => lower.includes(m));
 
