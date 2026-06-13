@@ -237,6 +237,30 @@ We work hard to protect you from unauthorized access, alteration, disclosure, or
     },
   },
   {
+    name: 'named-third-party-processor-sharing',
+    source: 'verbatim sentences from Telegram Privacy Policy (2026-06-13)',
+    text: `Since Telegram may rely on Google LLC or Microsoft Corporation for automatic translation of messages, the text of any message or set of messages that users choose to translate may be shared with Google or Microsoft in order to obtain their translated versions.
+The audio data of voice and video messages that users choose to convert to text may be shared with Google in order to obtain their transcribed versions.
+As such, we do not share your personal data with such data centers.
+Other users of our Services with whom you choose to communicate may be located outside the EEA.`,
+    mustFind: {
+      // Bare named processors are recipients even though "Google"/"Microsoft"
+      // are not in the generic recipient-noun list.
+      third_party_sharing: [
+        'may be shared with Google or Microsoft',
+        'audio data of voice and video messages',
+      ],
+    },
+    mustNotFind: {
+      // Negated data-center sentence stays suppressed; user-to-user sharing
+      // ("other users with whom you choose to communicate") is expected noise.
+      third_party_sharing: [
+        'we do not share your personal data with such data centers',
+        'Other users of our Services with whom you choose to communicate',
+      ],
+    },
+  },
+  {
     name: 'legal-process-judicial-order',
     source: 'Telegram-style judicial-authorities disclosure plus composite security boilerplate',
     text: `If Telegram receives a valid order from the relevant judicial authorities that confirms you are a suspect, we may disclose your IP address and phone number to the relevant authorities.

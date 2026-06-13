@@ -62,9 +62,29 @@ const LEGAL_PROCESS = [
   /\b(?:disclos\w+|shar\w+|provid\w+|releas\w+)\b[^]{0,100}?\b(?:required|permitted)\s+(?:or\s+permitted\s+)?by\s+(?:applicable\s+)?law\b/i,
 ];
 
+// Data nouns that anchor the "shared with <named company>" pattern below.
+// Both cases allowed so a sentence-initial "Audio data …" still qualifies.
+const DATA_NOUN =
+  '[Tt]ext|[Mm]essages?|[Aa]udio|[Vv]oice|[Dd]ata|[Ii]nformation|' +
+  '[Cc]ontent|[Rr]ecordings?|[Ff]iles?|[Dd]ocuments?|[Pp]hotos?|[Vv]ideos?';
+
+// Capitalized tokens that follow "with" but are not third-party recipients
+// (pronouns, articles, and our-own-data words), so "shared with You/The/
+// Personal Data" never reads as disclosure to an outside entity.
+const NOT_A_RECIPIENT =
+  'We|Us|You|Your|Our|The|This|These|Those|Such|Personal|Services?|Customers?|Users?';
+
 const POSITIVE = [
   // share/disclose verb + a recipient category in the same sentence
   new RegExp(`\\b(?:${SHARE_VERB})\\b[^]{0,120}?\\b(?:${RECIPIENT})\\b`, 'i'),
+  // Data shared with a NAMED third party (a proper-noun company), e.g. message
+  // "text … may be shared with Google or Microsoft". A bare company name is not
+  // in the recipient-noun list, so without this the disclosure is missed. The
+  // data noun before the verb keeps it from firing on unrelated "shared with
+  // <Capitalized>" phrasings; case-sensitive so the recipient is a proper noun.
+  new RegExp(
+    `\\b(?:${DATA_NOUN})\\b[^]{0,200}?\\b(?:shared?|disclosed?)\\s+with\\s+(?!(?:${NOT_A_RECIPIENT})\\b)[A-Z][A-Za-z.]+(?:\\s+(?:or|and|&)\\s+[A-Z][A-Za-z.]+)*`,
+  ),
   // "provide" only with a data object before the recipient — "provide your
   // information to advertising partners", not "services provided by affiliates".
   new RegExp(
