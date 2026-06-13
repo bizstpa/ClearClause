@@ -176,6 +176,20 @@ We collect your race and health information to personalize your experience.`,
     },
   },
   {
+    name: 'ebay-scope-not-sharing',
+    source: 'verbatim scope sentence from eBay Privacy Notice (2026-06-13) plus a composite affirmative',
+    text: `This User Privacy Notice applies to your use of this website and all eBay applications, services (including payment services), products and tools (collectively the "Services") provided by eBay Inc. or its affiliates.
+We provide your personal data to advertising partners.`,
+    mustFind: {
+      // "provide" with a data object is real disclosure.
+      third_party_sharing: ['We provide your personal data to advertising partners'],
+    },
+    mustNotFind: {
+      // Scope boilerplate ("services provided by X or its affiliates") is not.
+      third_party_sharing: ['provided by eBay Inc. or its affiliates'],
+    },
+  },
+  {
     name: 'legal-process-disclosure',
     source: 'composite of common legal-process disclosure and security-boilerplate phrasings',
     text: `We may disclose your information to comply with a court order or subpoena.

@@ -156,6 +156,21 @@ describe('third_party_sharing detector', () => {
     ).toHaveLength(0);
   });
 
+  it('flags "provide" only with a data object, not scope boilerplate', () => {
+    expect(
+      thirdPartySharing.detect(
+        'We provide your personal data to advertising partners.',
+      ),
+    ).toHaveLength(1);
+    // Scope boilerplate: "services provided by X or its affiliates" describes
+    // who runs the service, not a disclosure.
+    expect(
+      thirdPartySharing.detect(
+        'This notice applies to all services provided by eBay Inc. or its affiliates.',
+      ),
+    ).toHaveLength(0);
+  });
+
   it('does not flag unrelated mentions of partners', () => {
     expect(
       thirdPartySharing.detect('Our retail partners offer discounts in their own stores.'),

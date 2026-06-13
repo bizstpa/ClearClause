@@ -25,8 +25,12 @@ const RECIPIENT = [
   'contractors?',
 ].join('|');
 
+// "provide" is deliberately NOT in the general verb list: "services provided
+// by eBay Inc. or its affiliates" is scope boilerplate (who runs the service),
+// not disclosure. It earns a match only with a data object — see the dedicated
+// pattern below ("provide your information to ...").
 const SHARE_VERB =
-  'share|shares|shared|sharing|disclose|discloses|disclosed|disclosure|provide|provided';
+  'share|shares|shared|sharing|disclose|discloses|disclosed|disclosure';
 
 // Legal-process disclosure (product decision, V2.2): data handed to courts,
 // police, or regulators under legal compulsion. Kept inside third_party_sharing
@@ -59,6 +63,12 @@ const LEGAL_PROCESS = [
 const POSITIVE = [
   // share/disclose verb + a recipient category in the same sentence
   new RegExp(`\\b(?:${SHARE_VERB})\\b[^]{0,120}?\\b(?:${RECIPIENT})\\b`, 'i'),
+  // "provide" only with a data object before the recipient — "provide your
+  // information to advertising partners", not "services provided by affiliates".
+  new RegExp(
+    `\\bprovid(?:e|es|ed|ing)\\b[^]{0,80}?\\b(?:personal|your|user|customer|consumer)\\b[^]{0,30}?\\b(?:data|information)\\b[^]{0,120}?\\b(?:${RECIPIENT})\\b`,
+    'i',
+  ),
   ...LEGAL_PROCESS,
   // recipient before the verb: "Valve and its subsidiaries may share your
   // Personal Data with each other" — disclosure reads recipient-first.
