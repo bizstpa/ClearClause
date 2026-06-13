@@ -31,6 +31,18 @@ const SENSITIVE = [
   /\bprofiling\b/i,
 ];
 
+// A denial of collection or use must not be reported as collection — and
+// especially not at warning severity. Google's "we don't show you personalized
+// ads based on sensitive categories, such as race, religion ..." names
+// sensitive categories only to say it does NOT act on them. The veto is
+// verb-specific (a negated collect/use/show/...) so an affirmative collection
+// sentence that merely contains the word "not" elsewhere still flags.
+const NEGATED = [
+  /\b(?:do|does|did|will|would|shall)\s+not\s+(?:[a-z]+\s+){0,3}?(?:collect|use|sell|share|show|display|process|retain|store|disclose|require|request|ask)\b/i,
+  /\b(?:don't|doesn't|didn't|won't|don’t|doesn’t|didn’t|won’t)\s+(?:[a-z]+\s+){0,3}?(?:collect|use|sell|share|show|display|process|retain|store|disclose|require|request|ask)\b/i,
+  /\bnever\s+(?:[a-z]+\s+){0,2}?(?:collect|use|sell|share|show|display|process|store)\b/i,
+];
+
 // Ordinary categories: only flagged inside a collection context, because
 // words like "name" or "email" appear everywhere.
 const ORDINARY = [
@@ -49,6 +61,7 @@ export const dataCollection: Detector = {
   detect(text) {
     const matches: Match[] = [];
     for (const { sentence, index } of segmentSentences(text)) {
+      if (NEGATED.some((p) => p.test(sentence))) continue;
       if (SENSITIVE.some((p) => p.test(sentence))) {
         matches.push({ detectorId: 'data_collection', sentence, index, severity: 'warning' });
       } else if (ORDINARY.some((p) => p.test(sentence))) {

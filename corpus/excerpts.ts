@@ -162,6 +162,20 @@ Valve and its subsidiaries may share your Personal Data with each other and use 
     },
   },
   {
+    name: 'sensitive-collection-negation',
+    source: 'verbatim sentence from Google Privacy Policy (2026-06-13) plus a composite affirmative',
+    text: `We don’t show you personalized ads based on sensitive categories, such as race, religion, sexual orientation, or health.
+We collect your race and health information to personalize your experience.`,
+    mustFind: {
+      // The affirmative collection still flags (at warning severity).
+      data_collection: ['We collect your race and health information'],
+    },
+    mustNotFind: {
+      // The denial names sensitive categories only to deny acting on them.
+      data_collection: ['don’t show you personalized ads'],
+    },
+  },
+  {
     name: 'legal-process-disclosure',
     source: 'composite of common legal-process disclosure and security-boilerplate phrasings',
     text: `We may disclose your information to comply with a court order or subpoena.

@@ -57,6 +57,23 @@ describe('data_collection detector', () => {
     expect(matches[1].severity).toBe('info');
   });
 
+  it('does not flag a denial of sensitive collection or use', () => {
+    expect(
+      dataCollection.detect(
+        'We don’t show you personalized ads based on sensitive categories, such as race, religion, sexual orientation, or health.',
+      ),
+    ).toHaveLength(0);
+    expect(
+      dataCollection.detect('We do not collect your Social Security number or biometric data.'),
+    ).toHaveLength(0);
+  });
+
+  it('still flags an affirmative sensitive collection as warning', () => {
+    const matches = dataCollection.detect('We collect your race and health information.');
+    expect(matches).toHaveLength(1);
+    expect(matches[0].severity).toBe('warning');
+  });
+
   it('does not flag ordinary nouns outside a collection context', () => {
     expect(dataCollection.detect('Email us with questions about your order.')).toHaveLength(0);
     expect(dataCollection.detect('We collect rainwater at our facilities.')).toHaveLength(0);
