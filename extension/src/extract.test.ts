@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from 'vitest';
-import { extractAnalyzableText, stripInPageNavigation } from './extract';
+import { dedupeLines, extractAnalyzableText, stripInPageNavigation } from './extract';
 
 /** Build a detached document body from an HTML string for DOM-level assertions. */
 function bodyFrom(html: string): HTMLElement {
@@ -109,5 +109,25 @@ describe('extractAnalyzableText', () => {
 
     expect(lines).toContain('We retain personal data for as long as your account is active.');
     expect(lines).toContain('We sell de-identified data to analytics providers.');
+  });
+});
+
+describe('dedupeLines', () => {
+  it('keeps a single instance of a verbatim-repeated line', () => {
+    const repeated = 'We collect your name, email address, and device identifiers when you sign up.';
+    const text = [repeated, 'You can request deletion of your account at any time.', repeated].join('\n');
+
+    const lines = dedupeLines(text).split('\n');
+
+    expect(lines.filter((l) => l === repeated)).toHaveLength(1);
+    expect(lines).toContain('You can request deletion of your account at any time.');
+  });
+
+  it('leaves short repeated lines (headings, table cells) alone', () => {
+    const text = ['Yes', 'We share data with partners.', 'Yes'].join('\n');
+
+    const lines = dedupeLines(text).split('\n');
+
+    expect(lines.filter((l) => l === 'Yes')).toHaveLength(2);
   });
 });

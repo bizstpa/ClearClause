@@ -131,6 +131,28 @@ export function stripInPageNavigation(root: Document | Element): void {
   }
 }
 
+/**
+ * Collapse exact-duplicate lines, keeping the first occurrence. Some policies
+ * render the same disclosure into more than one container (a visible copy plus
+ * a print/SEO copy, repeated section intros), which doubles every flag the
+ * engine reports. Mirrors the fetch helper's dedup: exact-block only, no fuzzy
+ * matching, and short lines (headings, table cells) are left alone since they
+ * legitimately repeat and carry little signal.
+ */
+export function dedupeLines(text: string): string {
+  const seen = new Set<string>();
+  return text
+    .split('\n')
+    .filter((line) => {
+      const key = line.trim();
+      if (key.length < 40) return true;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .join('\n');
+}
+
 export function extractPolicyText(): ExtractionResult {
   // Readability mutates the document it parses, so operate on a clone of the
   // live DOM. Because the page is already fully rendered in the user's browser,
@@ -148,7 +170,7 @@ export function extractPolicyText(): ExtractionResult {
     const article = new Readability(docClone).parse();
     const title = article?.title?.trim() || fallbackTitle;
     const contentDoc = new DOMParser().parseFromString(article?.content ?? '', 'text/html');
-    const text = extractAnalyzableText(contentDoc.body);
+    const text = dedupeLines(extractAnalyzableText(contentDoc.body));
     return { text, title };
   } catch {
     // Unusual DOMs can make Readability throw. Degrade to empty text so the
