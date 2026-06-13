@@ -191,16 +191,22 @@ Valve and its subsidiaries may share your Personal Data with each other and use 
   },
   {
     name: 'sensitive-collection-negation',
-    source: 'verbatim sentence from Google Privacy Policy (2026-06-13) plus a composite affirmative',
+    source:
+      'verbatim sentences from Google and Reddit Privacy Policies (2026-06-13) plus composite affirmatives',
     text: `We don’t show you personalized ads based on sensitive categories, such as race, religion, sexual orientation, or health.
-We collect your race and health information to personalize your experience.`,
+We do not engage in profiling of consumers as defined under applicable law.
+We collect your race and health information to personalize your experience.
+We engage in profiling to build a profile about you and your preferences.`,
     mustFind: {
-      // The affirmative collection still flags (at warning severity).
-      data_collection: ['We collect your race and health information'],
+      // Affirmative collection / profiling still flags (at warning severity).
+      data_collection: [
+        'We collect your race and health information',
+        'We engage in profiling to build a profile about you',
+      ],
     },
     mustNotFind: {
-      // The denial names sensitive categories only to deny acting on them.
-      data_collection: ['don’t show you personalized ads'],
+      // Each denial names a sensitive item or activity only to deny it.
+      data_collection: ['don’t show you personalized ads', 'do not engage in profiling'],
     },
   },
   {
