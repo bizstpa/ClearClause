@@ -21,6 +21,10 @@ await build({
   build: {
     outDir,
     emptyOutDir: true,
+    // Drop Vite's module-preload polyfill: it injects a fetch() helper (dead
+    // code here — the popup has no dynamic imports) and a zero-network bundle
+    // must contain no network primitives at all, not merely unused ones.
+    modulePreload: false,
     rollupOptions: {
       input: { popup: resolve(extDir, 'popup.html') },
     },

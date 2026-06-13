@@ -1,6 +1,11 @@
 # ClearClause — Privacy Policy Analyzer
 
-ClearClause is a privacy policy analyzer (English-only). Paste a privacy policy or app terms into the page and get back a structured, plain-language readout of what the document says on six high-stakes dimensions, along with the exact sentences that triggered each flag, so you can read the source language yourself.
+ClearClause is a privacy policy analyzer (English-only). It gives you a structured, plain-language readout of what a document says on six high-stakes dimensions, along with the exact sentences that triggered each flag, so you can read the source language yourself.
+
+It ships two ways, both driven by the same detector engine:
+
+- **Web app** — paste a privacy policy or app terms into the page. ([Live](https://bizstpa.github.io/ClearClause/))
+- **Chrome extension** — scan the privacy policy on the page you're already on, with one click.
 
 ## The six detectors
 
@@ -11,9 +16,31 @@ ClearClause is a privacy policy analyzer (English-only). Paste a privacy policy 
 - **Binding arbitration** — mandatory/binding arbitration clauses and court/jury waivers.
 - **Class-action waiver** — waivers of class or collective action.
 
+## Browser extension
+
+The same engine, wrapped in a Manifest V3 Chrome extension that reads the policy from the page you're actually on — including JavaScript-rendered and login-gated pages that a server-side fetch can't reach, because the page is already rendered in your browser.
+
+How it works: click the toolbar icon and the popup opens. If the page looks like a privacy policy (judged from its URL and title), the popup says so — but it never reads the page on its own. You click **Scan this page**; the extension extracts the main text with Mozilla's [Readability](https://github.com/mozilla/readability) (run on a clone of the live page, dropping nav/footer/cookie chrome), runs the detectors, and shows the same readout as the web app. If a page yields little usable text (collapsed sections, multi-page policies, PDFs), the popup falls back to **scanning your current selection** or a **paste box** — never a dead end.
+
+Its privacy posture mirrors the web app and is non-negotiable:
+
+- **Zero network calls.** No remote host permissions and no `fetch`/XHR anywhere — the policy text never leaves your machine.
+- **Reads a page only when you click.** Permissions are limited to `activeTab` + `scripting`; there are no host permissions, no `<all_urls>`, and no passive/background page reading. The page is read solely on your explicit action.
+
+### Load it (unpacked)
+
+```sh
+npm install
+npm run build:extension     # builds into dist-extension/
+```
+
+Then in Chrome: open `chrome://extensions`, enable **Developer mode**, click **Load unpacked**, and select the `dist-extension/` folder. Pin the ClearClause icon and click it on any privacy-policy page.
+
+> Chrome Web Store submission is out of scope for now — the extension ships load-unpacked.
+
 ## Privacy promise
 
-**Analysis runs entirely in your browser. The text you paste never leaves your machine.** There is no backend, no API key, and no network call during analysis — you can verify this yourself in your browser's Network tab.
+**Analysis runs entirely in your browser. The text you paste — or that the extension reads from the open page — never leaves your machine.** There is no backend, no API key, and no network call during analysis in either the web app or the extension. You can verify this yourself in your browser's Network tab (the extension fires zero requests when scanning).
 
 ## Not legal advice
 
@@ -32,8 +59,11 @@ npm test             # unit + corpus regression tests
 npm run eval         # cross-policy detector summary
 npm run eval:misses  # candidate detector misses (over-inclusive, human-judged)
 npm run fetch -- <url>  # fetch a policy into gitignored corpus/local/
-npm run build        # static build (deployed to GitHub Pages)
+npm run build        # static web build (deployed to GitHub Pages)
+npm run build:extension  # MV3 extension build into dist-extension/ (load unpacked)
 ```
+
+The detector engine in `src/detectors/` is shared by both targets through `src/engine.ts` and is never forked — the web app and the extension run identical detection and render the readout through the same `src/readout.ts`.
 
 ## License
 
