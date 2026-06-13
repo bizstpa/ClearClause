@@ -1,6 +1,6 @@
 import './style.css';
-import { detectors, runDetectors } from './detectors/registry';
-import type { Category, DetectorResult, Severity } from './detectors/types';
+import { detectors, runDetectors } from './engine';
+import type { Category, DetectorResult, Severity } from './engine';
 import { strings as t } from './strings';
 
 const SEVERITY_ORDER: Severity[] = ['info', 'caution', 'warning'];
