@@ -99,6 +99,12 @@ the surrounding shell differ.
    `chrome.scripting.executeScript`, which clones the live `document`, runs Readability to drop
    nav/footer/sidebar/cookie chrome, and returns the main text. Because the page is already
    rendered in the user's browser, JS-rendered and login-gated pages are reachable.
+   The recovered text is cleaned before it reaches the engine so on-page wayfinding isn't
+   analyzed as policy language: in-page nav and table-of-contents jump-link lists are stripped
+   from the clone, standalone headings (`h1`–`h6`, `role="heading"`) are dropped rather than
+   emitted as sentences, and exact-duplicate blocks are collapsed. Cleaning errs toward keeping
+   body text — when a block is ambiguous between navigation and content, it is kept. This lives
+   entirely in the extraction layer; the detector engine (`src/detectors/`) is unchanged.
 4. The extracted text is piped into the existing engine (`runDetectors`) and the popup renders
    the shared readout (`src/readout.ts`).
 

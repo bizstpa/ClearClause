@@ -22,6 +22,8 @@ The same engine, wrapped in a Manifest V3 Chrome extension that reads the policy
 
 How it works: click the toolbar icon and the popup opens. If the page looks like a privacy policy (judged from its URL and title), the popup says so — but it never reads the page on its own. You click **Scan this page**; the extension extracts the main text with Mozilla's [Readability](https://github.com/mozilla/readability) (run on a clone of the live page, dropping nav/footer/cookie chrome), runs the detectors, and shows the same readout as the web app. If a page yields little usable text (collapsed sections, multi-page policies, PDFs), the popup falls back to **scanning your current selection** or a **paste box** — never a dead end.
 
+The extraction layer cleans the recovered text before the engine sees it, so on-page wayfinding doesn't get mistaken for policy language: in-page navigation and table-of-contents jump-link lists are stripped from the cloned page, standalone headings (`h1`–`h6` and `role="heading"`) are dropped rather than analyzed as sentences, and exact-duplicate blocks are collapsed. The cleaning errs toward keeping body text — when a block is ambiguous between navigation and content, it's kept. The detector engine itself is unchanged; only the quality of the text fed into it improved.
+
 Its privacy posture mirrors the web app and is non-negotiable:
 
 - **Zero network calls.** No remote host permissions and no `fetch`/XHR anywhere — the policy text never leaves your machine.
