@@ -32,6 +32,15 @@ export const strings = {
     noTab: 'No active tab to scan.',
     /** "{title}" → page title, "{count}" → extracted character count. */
     scanned: 'Scanned “{title}” — {count} characters of text.',
-    extractError: 'Couldn’t read this page.',
+    extractError: 'Couldn’t read this page automatically.',
+    thinNote:
+      'We couldn’t pull much readable text from this page (it may use collapsed sections, span multiple pages, or be a PDF). Highlight the policy and scan your selection, or paste it below.',
+    scanSelection: 'Scan selected text',
+    noSelection: 'No text is selected. Highlight the policy text on the page, then try again.',
+    pasteToggle: 'Paste policy text instead',
+    analyzePaste: 'Analyze pasted text',
+    /** "{count}" → character count of the analyzed text. */
+    scannedSelection: 'Analyzed your selection — {count} characters.',
+    scannedPaste: 'Analyzed pasted text — {count} characters.',
   },
 };

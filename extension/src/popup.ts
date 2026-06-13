@@ -17,9 +17,20 @@ interface State {
   results: DetectorResult[] | null;
   /** Whether the active tab's URL/title look like a privacy policy. */
   hint: boolean;
+  /** Whether the paste-box fallback is expanded. */
+  pasteOpen: boolean;
+  /** Retained paste-box contents across re-renders. */
+  pasteText: string;
 }
 
-const state: State = { phase: 'idle', status: '', results: null, hint: false };
+const state: State = {
+  phase: 'idle',
+  status: '',
+  results: null,
+  hint: false,
+  pasteOpen: false,
+  pasteText: '',
+};
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 
@@ -77,6 +88,46 @@ async function scanPage(): Promise<void> {
   }
 }
 
+/** Run the engine on text from a fallback path and show the readout. */
+function analyzeText(text: string, statusTemplate: string): void {
+  state.results = runDetectors(text);
+  state.phase = 'results';
+  state.status = statusTemplate.replace('{count}', text.length.toLocaleString());
+  render();
+}
+
+/** Fallback: scan whatever the user has selected on the page. */
+async function scanSelection(): Promise<void> {
+  const tab = await getActiveTab();
+  if (!tab?.id) {
+    state.status = t.ext.noTab;
+    render();
+    return;
+  }
+  const [injection] = await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: () => window.getSelection()?.toString() ?? '',
+  });
+  const text = ((injection?.result as string) ?? '').trim();
+  if (!text) {
+    state.status = t.ext.noSelection;
+    render();
+    return;
+  }
+  analyzeText(text, t.ext.scannedSelection);
+}
+
+/** Fallback: analyze text the user pasted directly into the popup. */
+function analyzePaste(): void {
+  const text = state.pasteText.trim();
+  if (!text) {
+    state.status = t.emptyInput;
+    render();
+    return;
+  }
+  analyzeText(text, t.ext.scannedPaste);
+}
+
 function render(): void {
   app.replaceChildren();
 
@@ -112,6 +163,12 @@ function render(): void {
     app.append(status);
   }
 
+  // When auto-extraction is thin or fails, degrade to user-driven fallbacks
+  // rather than a dead end: scan the page selection, or paste text directly.
+  if (state.phase === 'thin' || state.phase === 'error') {
+    app.append(renderFallbacks());
+  }
+
   if (state.phase === 'results' && state.results) {
     const heading = document.createElement('h2');
     heading.textContent = t.resultsHeading;
@@ -125,6 +182,54 @@ function render(): void {
   disclaimer.className = 'disclaimer';
   disclaimer.textContent = t.disclaimer;
   app.append(disclaimer);
+}
+
+/** The select-text + paste-box fallbacks, shown when extraction is thin. */
+function renderFallbacks(): HTMLElement {
+  const wrap = document.createElement('section');
+  wrap.className = 'fallbacks';
+
+  if (state.phase === 'thin') {
+    const note = document.createElement('p');
+    note.className = 'thin-note';
+    note.textContent = t.ext.thinNote;
+    wrap.append(note);
+  }
+
+  const selectBtn = document.createElement('button');
+  selectBtn.className = 'analyze secondary';
+  selectBtn.type = 'button';
+  selectBtn.textContent = t.ext.scanSelection;
+  selectBtn.addEventListener('click', () => void scanSelection());
+  wrap.append(selectBtn);
+
+  const paste = document.createElement('details');
+  paste.className = 'paste';
+  paste.open = state.pasteOpen;
+  paste.addEventListener('toggle', () => {
+    state.pasteOpen = paste.open;
+  });
+  const summary = document.createElement('summary');
+  summary.textContent = t.ext.pasteToggle;
+  paste.append(summary);
+
+  const textarea = document.createElement('textarea');
+  textarea.id = 'paste-text';
+  textarea.placeholder = t.textareaPlaceholder;
+  textarea.value = state.pasteText;
+  textarea.addEventListener('input', () => {
+    state.pasteText = textarea.value;
+  });
+
+  const pasteBtn = document.createElement('button');
+  pasteBtn.className = 'analyze';
+  pasteBtn.type = 'button';
+  pasteBtn.textContent = t.ext.analyzePaste;
+  pasteBtn.addEventListener('click', () => analyzePaste());
+
+  paste.append(textarea, pasteBtn);
+  wrap.append(paste);
+  return wrap;
 }
 
 /** On open, compute the privacy-policy hint from the active tab's URL + title. */
