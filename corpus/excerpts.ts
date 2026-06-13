@@ -146,6 +146,22 @@ We do not share your personal information with third parties.`,
     },
   },
   {
+    name: 'sharing-recipient-vocabulary-and-order',
+    source: 'verbatim sentences from Telegram / PayPal / Steam policies (2026-06-13)',
+    text: `To provide, improve and support our Services, we may share your personal data with: (1) our parent company, Telegram Group Inc, located in the British Virgin Islands, (2) Telegraph Inc., a group member also located in the BVI.
+We may disclose Personal Information with financial institutions to jointly offer a product, such as PayPal Credit.
+We may disclose Personal Information with payment networks and processors to facilitate payment processing.
+Valve and its subsidiaries may share your Personal Data with each other and use it to the degree necessary to achieve the purposes listed in section 2 above.`,
+    mustFind: {
+      third_party_sharing: [
+        'our parent company, Telegram Group Inc',
+        'financial institutions',
+        'payment networks and processors',
+        'Valve and its subsidiaries may share your Personal Data',
+      ],
+    },
+  },
+  {
     name: 'no-sharing-negation',
     source: 'composite no-sharing statement',
     text: 'We do not share your personal information with third parties, and we will never sell your data to anyone.',

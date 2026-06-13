@@ -27,6 +27,47 @@ describe('third_party_sharing detector', () => {
     expect(sentences).toContain('Social networks');
   });
 
+  it('flags new recipient vocabulary (parent company, financial institutions, payment networks)', () => {
+    expect(
+      thirdPartySharing.detect(
+        'To provide our Services, we may share your personal data with our parent company, Telegram Group Inc.',
+      ),
+    ).toHaveLength(1);
+    expect(
+      thirdPartySharing.detect(
+        'We may disclose Personal Information with financial institutions to jointly offer a product.',
+      ),
+    ).toHaveLength(1);
+    expect(
+      thirdPartySharing.detect(
+        'We may disclose Personal Information with payment networks and processors to facilitate payment processing.',
+      ),
+    ).toHaveLength(1);
+  });
+
+  it('flags recipient-before-verb word order', () => {
+    expect(
+      thirdPartySharing.detect(
+        'Valve and its subsidiaries may share your Personal Data with each other.',
+      ),
+    ).toHaveLength(1);
+  });
+
+  it('flags disclosure to other account holders but not user-to-user sharing', () => {
+    expect(
+      thirdPartySharing.detect(
+        'We may disclose Personal Information with other account holders to complete a payment transaction.',
+      ),
+    ).toHaveLength(1);
+    // The user sharing their own content with other users is not the company
+    // disclosing — must stay unflagged.
+    expect(
+      thirdPartySharing.detect(
+        'When you chat with others and share content with them, they become capable of seeing it.',
+      ),
+    ).toHaveLength(0);
+  });
+
   it('flags business-transfer language', () => {
     expect(
       thirdPartySharing.detect(

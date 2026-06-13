@@ -1,10 +1,50 @@
 import type { Detector, Match } from './types';
 import { segmentSentences } from './segment';
 
+// Recipient categories policies name when disclosing data. One source string
+// so the verb-recipient patterns below can match in either order.
+const RECIPIENT = [
+  'third[- ]part(?:y|ies)',
+  'affiliates?',
+  'affiliated\\s+(?:entities|companies)',
+  'subsidiaries',
+  'parent\\s+compan(?:y|ies)',
+  'service\\s+providers?',
+  'business\\s+partners?',
+  'financial\\s+(?:institutions?|partners?)',
+  'payment\\s+(?:networks?|processors?)',
+  'advertis\\w+',
+  'analytics\\s+providers?',
+  'social\\s+networks?',
+  'professional\\s+advis[oe]rs?',
+  'member\\s+stations?',
+  'government\\s+(?:entities|agencies)',
+  'authorit(?:y|ies)',
+  'data\\s+brokers?',
+  'vendors?',
+  'contractors?',
+].join('|');
+
+const SHARE_VERB =
+  'share|shares|shared|sharing|disclose|discloses|disclosed|disclosure|provide|provided';
+
 const POSITIVE = [
   // share/disclose verb + a recipient category in the same sentence
-  /\b(?:share|shares|shared|sharing|disclose|discloses|disclosed|disclosure|provide|provided)\b[^]{0,120}?\b(?:third[- ]part(?:y|ies)|affiliates?|subsidiaries|service\s+providers?|business\s+partners?|advertis\w+|analytics\s+providers?|social\s+networks?|government\s+(?:entities|agencies|authorities)|data\s+brokers?|vendors?|contractors?)\b/i,
-  /\b(?:third[- ]part(?:y|ies)|affiliates?|service\s+providers?|partners?)\b[^]{0,80}?\b(?:receive|receives|access|collect|obtain)\b[^]{0,60}?\b(?:personal|your|user)\b[^]{0,30}?\b(?:data|information)\b/i,
+  new RegExp(`\\b(?:${SHARE_VERB})\\b[^]{0,120}?\\b(?:${RECIPIENT})\\b`, 'i'),
+  // recipient before the verb: "Valve and its subsidiaries may share your
+  // Personal Data with each other" — disclosure reads recipient-first.
+  new RegExp(
+    `\\b(?:${RECIPIENT})\\b[^]{0,80}?\\b(?:share|shares|disclose|discloses|transfer|transfers)\\b[^]{0,80}?\\b(?:personal|your|user)\\b[^]{0,40}?\\b(?:data|information)\\b`,
+    'i',
+  ),
+  new RegExp(
+    `\\b(?:${RECIPIENT})\\b[^]{0,80}?\\b(?:receive|receives|access|collect|obtain)\\b[^]{0,60}?\\b(?:personal|your|user)\\b[^]{0,30}?\\b(?:data|information)\\b`,
+    'i',
+  ),
+  // Other users/account holders as named disclosure recipients. The company
+  // must be the one disclosing ("we may share ... with other users") so that
+  // user-to-user sharing ("you share content with other users") stays out.
+  /\bwe\s+(?:may\s+|will\s+|might\s+)?(?:share|disclose|display)\b[^]{0,120}?\bother\s+(?:\w+\s+)?(?:users|account\s+holders|members)\b/i,
   // Standalone recipient lines from categories-of-recipients lists — after
   // line-break segmentation these carry no verb at all.
   /^(?:advertising\s+networks?|internet\s+service\s+providers?|data\s+analytics\s+providers?|social\s+(?:networks?|media(?:\s+platforms)?)|government\s+entities|data\s+brokers?|operating\s+systems(?:\s+and\s+platforms)?)\.?$/i,
