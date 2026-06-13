@@ -28,6 +28,7 @@ export const strings = {
     tagline: 'See what this page’s privacy policy actually says.',
     scanPage: 'Scan this page',
     scanning: 'Reading the page…',
+    hint: 'This looks like a privacy policy — scan it?',
     noTab: 'No active tab to scan.',
     /** "{title}" → page title, "{count}" → extracted character count. */
     scanned: 'Scanned “{title}” — {count} characters of text.',

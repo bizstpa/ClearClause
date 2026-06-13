@@ -6,6 +6,6 @@ export default defineConfig(({ command }) => ({
   base: command === 'build' ? '/ClearClause/' : '/',
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'extension/**/*.test.ts'],
   },
 }));

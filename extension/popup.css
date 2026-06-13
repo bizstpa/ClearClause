@@ -41,6 +41,17 @@ header h1 {
   font-size: 0.85rem;
 }
 
+.hint {
+  margin: 0.75rem 0 0;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: #eaf1fb;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+}
+
 .analyze {
   font: inherit;
   font-weight: 600;

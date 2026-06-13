@@ -6,6 +6,7 @@ import type { DetectorResult } from '../../src/engine';
 import { strings as t } from '../../src/strings';
 import { renderResult } from '../../src/readout';
 import { EXTRACT_GLOBAL_KEY, MIN_USABLE_TEXT_LENGTH } from './constants';
+import { looksLikePrivacyPolicy } from './looks-like-policy';
 import type { ExtractionResult } from './extract';
 
 type Phase = 'idle' | 'scanning' | 'results' | 'thin' | 'error';
@@ -14,9 +15,11 @@ interface State {
   phase: Phase;
   status: string;
   results: DetectorResult[] | null;
+  /** Whether the active tab's URL/title look like a privacy policy. */
+  hint: boolean;
 }
 
-const state: State = { phase: 'idle', status: '', results: null };
+const state: State = { phase: 'idle', status: '', results: null, hint: false };
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 
@@ -86,6 +89,14 @@ function render(): void {
   header.append(h1, tagline);
   app.append(header);
 
+  // Hint only — surfaced from the tab's URL/title, never an auto-read.
+  if (state.hint && state.phase === 'idle') {
+    const hint = document.createElement('p');
+    hint.className = 'hint';
+    hint.textContent = t.ext.hint;
+    app.append(hint);
+  }
+
   const scan = document.createElement('button');
   scan.className = 'analyze';
   scan.type = 'button';
@@ -116,4 +127,12 @@ function render(): void {
   app.append(disclaimer);
 }
 
-render();
+/** On open, compute the privacy-policy hint from the active tab's URL + title. */
+async function init(): Promise<void> {
+  render();
+  const tab = await getActiveTab();
+  state.hint = looksLikePrivacyPolicy(tab?.url, tab?.title);
+  if (state.hint) render();
+}
+
+void init();
