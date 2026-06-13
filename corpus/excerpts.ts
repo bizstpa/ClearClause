@@ -162,6 +162,25 @@ Valve and its subsidiaries may share your Personal Data with each other and use 
     },
   },
   {
+    name: 'legal-process-disclosure',
+    source: 'composite of common legal-process disclosure and security-boilerplate phrasings',
+    text: `We may disclose your information to comply with a court order or subpoena.
+We and service providers may disclose any collected information to respond to subpoenas, court orders, legal process, and lawful requests by public authorities.
+Finally, we may disclose your personal information as otherwise permitted or required by law.
+We work hard to protect you from unauthorized access, alteration, disclosure, or destruction of information we hold.`,
+    mustFind: {
+      third_party_sharing: [
+        'comply with a court order or subpoena',
+        'respond to subpoenas, court orders, legal process',
+        'permitted or required by law',
+      ],
+    },
+    mustNotFind: {
+      // Security boilerplate names no legal demand — must not flag.
+      third_party_sharing: ['protect you from unauthorized access'],
+    },
+  },
+  {
     name: 'no-sharing-negation',
     source: 'composite no-sharing statement',
     text: 'We do not share your personal information with third parties, and we will never sell your data to anyone.',

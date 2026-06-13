@@ -68,6 +68,35 @@ describe('third_party_sharing detector', () => {
     ).toHaveLength(0);
   });
 
+  it('flags legal-process disclosure', () => {
+    expect(
+      thirdPartySharing.detect(
+        'We may disclose your information to comply with a court order or subpoena.',
+      ),
+    ).toHaveLength(1);
+    expect(
+      thirdPartySharing.detect(
+        'We may disclose any collected information to respond to subpoenas, court orders, and legal process.',
+      ),
+    ).toHaveLength(1);
+    expect(
+      thirdPartySharing.detect(
+        'We may disclose your personal information as otherwise permitted or required by law.',
+      ),
+    ).toHaveLength(1);
+  });
+
+  it('does not flag security boilerplate that merely mentions disclosure', () => {
+    expect(
+      thirdPartySharing.detect(
+        'We work hard to protect you from unauthorized access, alteration, disclosure, or destruction of information we hold.',
+      ),
+    ).toHaveLength(0);
+    expect(
+      thirdPartySharing.detect('We protect against unauthorized disclosure.'),
+    ).toHaveLength(0);
+  });
+
   it('flags business-transfer language', () => {
     expect(
       thirdPartySharing.detect(

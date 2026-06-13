@@ -28,9 +28,38 @@ const RECIPIENT = [
 const SHARE_VERB =
   'share|shares|shared|sharing|disclose|discloses|disclosed|disclosure|provide|provided';
 
+// Legal-process disclosure (product decision, V2.2): data handed to courts,
+// police, or regulators under legal compulsion. Kept inside third_party_sharing
+// because it is just another class of disclosure recipient. Every pattern
+// requires a concrete legal-demand noun, so security boilerplate that merely
+// mentions "disclosure" ("protect against unauthorized disclosure") — which
+// names no demand — never matches.
+const LEGAL_DEMAND =
+  'subpoenas?|court\\s+orders?|search\\s+warrants?|warrants?|legal\\s+process|' +
+  'legal\\s+(?:demand|request|proceeding|obligation)s?|lawful\\s+requests?|' +
+  'law\\s+enforcement|regulatory\\s+authorit\\w+|public\\s+authorit(?:y|ies)';
+
+const LEGAL_PROCESS = [
+  // disclosure verb + a legal demand, as recipient or as the reason
+  // ("disclose ... to law enforcement", "disclose ... to comply with a subpoena").
+  new RegExp(
+    `\\b(?:disclos\\w+|shar\\w+|provid\\w+|releas\\w+|produc\\w+|hand(?:ed|s)?\\s+over|turn(?:ed|s)?\\s+over)\\b[^]{0,120}?\\b(?:${LEGAL_DEMAND})\\b`,
+    'i',
+  ),
+  // "to comply with / in response to / respond to / pursuant to" a legal demand;
+  // the disclosure is implied by the demand itself.
+  new RegExp(
+    `\\b(?:comply\\s+with|in\\s+response\\s+to|respond\\s+to|pursuant\\s+to)\\b[^]{0,60}?\\b(?:${LEGAL_DEMAND})\\b`,
+    'i',
+  ),
+  // disclosure "as required / permitted by (applicable) law".
+  /\b(?:disclos\w+|shar\w+|provid\w+|releas\w+)\b[^]{0,100}?\b(?:required|permitted)\s+(?:or\s+permitted\s+)?by\s+(?:applicable\s+)?law\b/i,
+];
+
 const POSITIVE = [
   // share/disclose verb + a recipient category in the same sentence
   new RegExp(`\\b(?:${SHARE_VERB})\\b[^]{0,120}?\\b(?:${RECIPIENT})\\b`, 'i'),
+  ...LEGAL_PROCESS,
   // recipient before the verb: "Valve and its subsidiaries may share your
   // Personal Data with each other" — disclosure reads recipient-first.
   new RegExp(
