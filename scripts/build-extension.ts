@@ -49,6 +49,23 @@ await build({
   },
 });
 
+// Pass 3: the background service worker. It registers the declarativeContent
+// hint rule and nothing else — no imports, no network. Bundled as a classic
+// IIFE so the manifest can load it as a plain service worker script.
+await build({
+  configFile: false,
+  build: {
+    outDir,
+    emptyOutDir: false,
+    lib: {
+      entry: resolve(extDir, 'src/background.ts'),
+      formats: ['iife'],
+      name: 'ClearClauseBackground',
+      fileName: () => 'background.js',
+    },
+  },
+});
+
 // Static assets Vite doesn't process as part of the popup graph.
 mkdirSync(resolve(outDir, 'icons'), { recursive: true });
 cpSync(resolve(extDir, 'manifest.json'), resolve(outDir, 'manifest.json'));
