@@ -85,8 +85,10 @@ the surrounding shell differ.
 - **Zero network calls.** No remote host permissions, no `fetch`/XHR during analysis.
 - **Explicit user action only.** Reading a page happens solely when the user clicks the toolbar
   icon and then scans. No passive injection, no background page reading.
-- **Minimal permissions.** `activeTab` + `scripting` only. No host permissions, no `<all_urls>`,
-  no persistent content scripts, no background service worker.
+- **Minimal permissions.** `activeTab` + `scripting` + `declarativeContent` only. No host
+  permissions, no `<all_urls>`, no `tabs` permission, no persistent content scripts. A minimal
+  background service worker exists solely to register the `declarativeContent` URL-pattern rule
+  that powers the toolbar-icon hint; it reads no page content and makes no network call.
 
 ### Flow
 1. User clicks the toolbar icon → popup opens. `activeTab` grants transient access to the
@@ -94,7 +96,12 @@ the surrounding shell differ.
 2. The popup reads the active tab's URL + title and computes a *hint* (`looksLikePrivacyPolicy`)
    — URL contains `privacy`, `privacy-policy`, `legal/privacy`, `privacy-notice`, or the title
    carries policy keywords. The hint only surfaces a "this looks like a privacy policy — scan
-   it?" affordance; it never triggers a read on its own.
+   it?" affordance; it never triggers a read on its own. The toolbar icon also carries this hint
+   *before* the popup opens: a `declarativeContent` rule (registered by a minimal background
+   service worker) matches the same URL signals entirely inside Chrome and swaps the action icon
+   to a hint variant via `SetIcon`. Because Chrome evaluates the URL, the extension only learns
+   that a rule matched — it never receives the URL or browsing history, and this needs no `tabs`
+   or host permission (only `declarativeContent`).
 3. User clicks **Scan this page** → the popup injects `extract.js` (bundled Readability) via
    `chrome.scripting.executeScript`, which clones the live `document`, runs Readability to drop
    nav/footer/sidebar/cookie chrome, and returns the main text. Because the page is already
@@ -102,9 +109,14 @@ the surrounding shell differ.
    The recovered text is cleaned before it reaches the engine so on-page wayfinding isn't
    analyzed as policy language: in-page nav and table-of-contents jump-link lists are stripped
    from the clone, standalone headings (`h1`–`h6`, `role="heading"`) are dropped rather than
-   emitted as sentences, and exact-duplicate blocks are collapsed. Cleaning errs toward keeping
-   body text — when a block is ambiguous between navigation and content, it is kept. This lives
-   entirely in the extraction layer; the detector engine (`src/detectors/`) is unchanged.
+   emitted as sentences, and exact-duplicate blocks are collapsed. Two further rules catch
+   styled subheaders with no heading markup (e.g. a recurring "Information You Provide Us"
+   rendered as a plain `<p>`): a short line that recurs 3+ times collapses to one instance, and a
+   short, punctuation-less block that recurs is treated as a heading and not emitted. All three
+   conditions (short, no sentence-ending punctuation, recurring) must hold, so one-off short
+   lines and short sentences ending in a period are kept. Cleaning errs toward keeping body text
+   — when a block is ambiguous between navigation and content, it is kept. This lives entirely in
+   the extraction layer; the detector engine (`src/detectors/`) is unchanged.
 4. The extracted text is piped into the existing engine (`runDetectors`) and the popup renders
    the shared readout (`src/readout.ts`).
 
