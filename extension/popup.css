@@ -1,0 +1,42 @@
+:root {
+  --ink: #1a1a1a;
+  --muted: #555;
+  --line: #d5d5d5;
+  --accent: #1a5fb4;
+  --found-bg: #fff6ec;
+  --warning: #9a3412;
+  --caution: #92600a;
+  --info: #1a5fb4;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  width: 420px;
+  max-height: 580px;
+  overflow-y: auto;
+  background: #fff;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color: var(--ink);
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+#app {
+  padding: 0.9rem 1rem 1.1rem;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.tagline {
+  margin: 0.15rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}

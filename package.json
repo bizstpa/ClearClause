@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:extension": "tsc --noEmit -p extension/tsconfig.json && vite-node scripts/build-extension.ts",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -15,9 +16,13 @@
     "fetch": "vite-node scripts/fetch-policy.ts"
   },
   "devDependencies": {
+    "@types/chrome": "^0.1.43",
     "typescript": "^5.8.0",
     "vite": "^6.3.0",
     "vite-node": "^3.2.0",
     "vitest": "^3.1.0"
+  },
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0"
   }
 }

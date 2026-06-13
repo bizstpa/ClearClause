@@ -76,5 +76,45 @@ For each category: found / not found, severity, and a count of matched sentences
 ## Deploy
 Static Vite build deployed to GitHub Pages. The live URL goes in the README.
 
+## Chrome extension (V3)
+The same engine, wrapped in a Manifest V3 extension that reads the policy from the page the
+user is already on. The engine and detector contract are unchanged; only the input source and
+the surrounding shell differ.
+
+### Privacy constraints (non-negotiable, mirror the web app)
+- **Zero network calls.** No remote host permissions, no `fetch`/XHR during analysis.
+- **Explicit user action only.** Reading a page happens solely when the user clicks the toolbar
+  icon and then scans. No passive injection, no background page reading.
+- **Minimal permissions.** `activeTab` + `scripting` only. No host permissions, no `<all_urls>`,
+  no persistent content scripts, no background service worker.
+
+### Flow
+1. User clicks the toolbar icon → popup opens. `activeTab` grants transient access to the
+   current tab on this invocation.
+2. The popup reads the active tab's URL + title and computes a *hint* (`looksLikePrivacyPolicy`)
+   — URL contains `privacy`, `privacy-policy`, `legal/privacy`, `privacy-notice`, or the title
+   carries policy keywords. The hint only surfaces a "this looks like a privacy policy — scan
+   it?" affordance; it never triggers a read on its own.
+3. User clicks **Scan this page** → the popup injects `extract.js` (bundled Readability) via
+   `chrome.scripting.executeScript`, which clones the live `document`, runs Readability to drop
+   nav/footer/sidebar/cookie chrome, and returns the main text. Because the page is already
+   rendered in the user's browser, JS-rendered and login-gated pages are reachable.
+4. The extracted text is piped into the existing engine (`runDetectors`) and the popup renders
+   the shared readout (`src/readout.ts`).
+
+### Fallbacks (required)
+Auto-extraction can return thin/empty text (collapsed accordions, multi-page policies, PDFs).
+When the extracted text is below a usable threshold, the popup offers, in order of effort:
+- **Scan selected text** — reads `window.getSelection()` on the page (still user-action-gated).
+- **Paste box** — the ultimate fallback; the user pastes text directly into the popup.
+Both feed the same `runDetectors` engine. A failed auto-extract degrades gracefully, never a
+dead end.
+
+### Build target
+`extension/` holds the manifest, popup HTML/CSS, and the popup + extraction sources. The
+extension build (`npm run build:extension`) bundles into `dist-extension/`, which is what loads
+via `chrome://extensions` → Load unpacked. The web app build is unaffected.
+
 ## Non-goals for V1
-LLM summaries, any API/key, Chrome extension packaging, auto-fetching page policies, accounts, history, analytics/telemetry.
+LLM summaries, any API/key, auto-fetching/scraping page policies from a URL, accounts, history,
+analytics/telemetry, Chrome Web Store submission.
