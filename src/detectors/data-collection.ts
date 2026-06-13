@@ -34,13 +34,19 @@ const SENSITIVE = [
 // A denial of collection or use must not be reported as collection — and
 // especially not at warning severity. Google's "we don't show you personalized
 // ads based on sensitive categories, such as race, religion ..." names
-// sensitive categories only to say it does NOT act on them. The veto is
-// verb-specific (a negated collect/use/show/...) so an affirmative collection
-// sentence that merely contains the word "not" elsewhere still flags.
+// sensitive categories only to say it does NOT act on them; Reddit's "we do not
+// engage in profiling of consumers" names a sensitive activity only to deny it.
+// The veto is verb-specific (a negated act verb) so an affirmative collection
+// sentence that merely contains the word "not" elsewhere still flags. The verb
+// list includes activity verbs ("engage", "participate", "conduct") so denials
+// phrased as "do not engage in profiling/tracking/..." are caught the same way
+// as "do not collect/sell/share".
+const ACT_VERB =
+  '(?:collect|use|sell|share|show|display|process|retain|store|disclose|require|request|ask|engage|participate|conduct|perform|track|monitor|profile)';
 const NEGATED = [
-  /\b(?:do|does|did|will|would|shall)\s+not\s+(?:[a-z]+\s+){0,3}?(?:collect|use|sell|share|show|display|process|retain|store|disclose|require|request|ask)\b/i,
-  /\b(?:don't|doesn't|didn't|won't|don’t|doesn’t|didn’t|won’t)\s+(?:[a-z]+\s+){0,3}?(?:collect|use|sell|share|show|display|process|retain|store|disclose|require|request|ask)\b/i,
-  /\bnever\s+(?:[a-z]+\s+){0,2}?(?:collect|use|sell|share|show|display|process|store)\b/i,
+  new RegExp(`\\b(?:do|does|did|will|would|shall)\\s+not\\s+(?:[a-z']+\\s+){0,3}?${ACT_VERB}\\b`, 'i'),
+  new RegExp(`\\b(?:don't|doesn't|didn't|won't|don’t|doesn’t|didn’t|won’t)\\s+(?:[a-z']+\\s+){0,3}?${ACT_VERB}\\b`, 'i'),
+  new RegExp(`\\bnever\\s+(?:[a-z']+\\s+){0,2}?${ACT_VERB}\\b`, 'i'),
 ];
 
 // Ordinary categories: only flagged inside a collection context, because

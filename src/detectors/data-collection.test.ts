@@ -68,8 +68,23 @@ describe('data_collection detector', () => {
     ).toHaveLength(0);
   });
 
+  it('does not flag a denial of a sensitive activity ("do not engage in profiling")', () => {
+    expect(
+      dataCollection.detect('We do not engage in profiling of consumers as defined under applicable law.'),
+    ).toHaveLength(0);
+    expect(dataCollection.detect('We do not track your precise geolocation.')).toHaveLength(0);
+  });
+
   it('still flags an affirmative sensitive collection as warning', () => {
     const matches = dataCollection.detect('We collect your race and health information.');
+    expect(matches).toHaveLength(1);
+    expect(matches[0].severity).toBe('warning');
+  });
+
+  it('still flags an affirmative profiling assertion as warning', () => {
+    const matches = dataCollection.detect(
+      'We engage in profiling to build a profile about you and your preferences.',
+    );
     expect(matches).toHaveLength(1);
     expect(matches[0].severity).toBe('warning');
   });
