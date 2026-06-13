@@ -1,6 +1,12 @@
 export interface SentenceSpan {
   sentence: string; // trimmed sentence text, verbatim otherwise
   index: number; // character offset of the sentence start in the source text
+  // When this span is an enumerated list item ("(1) …", "1.", "• …") that
+  // follows a stem ending in a colon ("we may share your data with:"), the
+  // stem is carried here. `sentence` stays the bare item for display, but a
+  // detector can evaluate `leadIn + sentence` so each item is read with the
+  // verb context that introduced the list. Undefined for ordinary spans.
+  leadIn?: string;
 }
 
 // Tokens that end with a period without ending a sentence. Compared
@@ -45,13 +51,31 @@ export function segmentSentences(text: string): SentenceSpan[] {
   // "sentence". A matched unit should read as one line, not a section.
   const spans: SentenceSpan[] = [];
   let lineStart = 0;
+  // The stem of an open colon-introduced list ("… with:"), carried onto each
+  // enumerated item that follows. Reset when a non-item line ends the list.
+  let leadIn: string | undefined;
   for (let i = 0; i <= text.length; i++) {
     if (i < text.length && text[i] !== '\n') continue;
     const line = text.slice(lineStart, i);
     const marker = line.match(LIST_MARKER);
     const offset = lineStart + (marker ? marker[0].length : 0);
-    for (const span of segmentBlock(marker ? line.slice(marker[0].length) : line)) {
-      spans.push({ sentence: span.sentence, index: span.index + offset });
+    const lineSpans = segmentBlock(marker ? line.slice(marker[0].length) : line);
+
+    if (marker && leadIn) {
+      // Enumerated item under an open list lead-in: keep it discrete for
+      // display but carry the stem so the verb context isn't severed.
+      for (const span of lineSpans) {
+        spans.push({ sentence: span.sentence, index: span.index + offset, leadIn });
+      }
+    } else {
+      for (const span of lineSpans) {
+        spans.push({ sentence: span.sentence, index: span.index + offset });
+      }
+      // A non-item line that ends in a colon opens a list; any other non-item
+      // line closes one. Blank lines (no spans) leave an open list untouched,
+      // so a lead-in and its items may be separated by whitespace.
+      const last = lineSpans[lineSpans.length - 1];
+      if (last) leadIn = /:$/.test(last.sentence) ? last.sentence : undefined;
     }
     lineStart = i + 1;
   }

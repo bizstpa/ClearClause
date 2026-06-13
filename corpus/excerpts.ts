@@ -160,6 +160,20 @@ We do not share your personal information with third parties.`,
     },
   },
   {
+    name: 'inline-list-leadin-carried',
+    source: 'composite Telegram-style colon lead-in with enumerated recipients on separate lines',
+    // The stem carrying the verb ("share … with:") sits on its own line and
+    // the recipients follow as enumerated items. The lead-in must be carried
+    // onto each item so the disclosure is not severed by segmentation.
+    text: `To provide, improve and support our Services, we may share your personal data with:
+(1) our parent company, Acme Group Inc, located in the British Virgin Islands
+(2) Beta Holdings Inc., a group member also located in the BVI
+(3) Gamma FZ-LLC, a group member located in Dubai`,
+    mustFind: {
+      third_party_sharing: ['our parent company, Acme Group Inc'],
+    },
+  },
+  {
     name: 'sharing-recipient-vocabulary-and-order',
     source: 'verbatim sentences from Telegram / PayPal / Steam policies (2026-06-13)',
     text: `To provide, improve and support our Services, we may share your personal data with: (1) our parent company, Telegram Group Inc, located in the British Virgin Islands, (2) Telegraph Inc., a group member also located in the BVI.

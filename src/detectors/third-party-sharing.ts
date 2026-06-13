@@ -151,8 +151,14 @@ export const thirdPartySharing: Detector = {
   severity: 'caution',
   detect(text) {
     const matches: Match[] = [];
-    for (const { sentence, index } of segmentSentences(text)) {
-      if (isSharingDisclosure(sentence)) {
+    for (const { sentence, index, leadIn } of segmentSentences(text)) {
+      // Carry a list lead-in's verb context onto its items ("share … with:"
+      // + "(1) our parent company …"). Skip the carry when the lead-in already
+      // flags on its own — its disclosure is counted on the lead-in line, so
+      // re-flagging every item would just inflate the count.
+      const carry = leadIn && !isSharingDisclosure(leadIn);
+      const context = carry ? `${leadIn} ${sentence}` : sentence;
+      if (isSharingDisclosure(context)) {
         matches.push({ detectorId: 'third_party_sharing', sentence, index });
       }
     }
