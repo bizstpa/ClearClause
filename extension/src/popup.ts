@@ -4,6 +4,7 @@
 import { runDetectors } from '../../src/engine';
 import type { DetectorResult } from '../../src/engine';
 import { strings as t } from '../../src/strings';
+import { renderResult } from '../../src/readout';
 import { EXTRACT_GLOBAL_KEY, MIN_USABLE_TEXT_LENGTH } from './constants';
 import type { ExtractionResult } from './extract';
 
@@ -101,19 +102,12 @@ function render(): void {
   }
 
   if (state.phase === 'results' && state.results) {
-    const found = state.results.filter((r) => r.found);
-    const summary = document.createElement('p');
-    summary.className = 'match-count';
-    summary.textContent = `Found language in ${found.length} of ${state.results.length} categories.`;
-    app.append(summary);
-
-    const list = document.createElement('ul');
-    for (const result of found) {
-      const li = document.createElement('li');
-      li.textContent = `${result.category} — ${result.matches.length} sentence(s)`;
-      list.append(li);
+    const heading = document.createElement('h2');
+    heading.textContent = t.resultsHeading;
+    app.append(heading);
+    for (const result of state.results) {
+      app.append(renderResult(result));
     }
-    app.append(list);
   }
 
   const disclaimer = document.createElement('p');
