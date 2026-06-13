@@ -16,14 +16,29 @@ const VAGUE = [
   /\buntil\s+(?:it\s+is\s+)?no\s+longer\s+(?:needed|necessary|required)\b/i,
   /\bas\s+(?:required|permitted)\s+by\s+(?:applicable\s+)?law\b/i,
   /\b(?:business|legal|operational)\s+(?:purposes?|needs?|requirements?|obligations?)\b/i,
+  // Criteria-based / GDPR-style retention names factors but no actual period,
+  // so it is the concern just like vague language ("for different periods
+  // depending on ...", "we consider the amount, nature, and sensitivity ...",
+  // "the criteria used to determine our retention period ...").
+  /\bfor\s+(?:different|differing|varying|various)\s+(?:periods?|lengths?\s+of\s+time|amounts?\s+of\s+time)\b/i,
+  /\bdepend(?:s|ing)?\s+on\s+(?:what|how|the\s+(?:type|nature|purpose|amount|sensitivity))\b/i,
+  /\bcriteria\s+(?:used\s+)?(?:to\s+determine|for\s+determining|we\s+use)\b/i,
+  /\b(?:consider|take\s+into\s+account)\b[^]{0,60}?\b(?:amount|nature|sensitivity)\b[^]{0,60}?\b(?:information|data|personal)\b/i,
+  /\bfactors?\b[^]{0,50}?\b(?:affect|determine|influence)\b[^]{0,40}?\bretention\b/i,
 ];
+
+// Word-numbers that introduce a spelled-out duration ("one year", "six months").
+const WORDNUM =
+  'one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|' +
+  'thirteen|fourteen|fifteen|eighteen|twenty|twenty-four|thirty|sixty|ninety';
 
 // A specific period is informative — the contrast with vague language is the
 // point of this detector.
 const SPECIFIC = [
   /\b\w+\s+\(\d+\)\s+(?:day|week|month|year)s?\b/i, // "twelve (12) months"
+  /\b\d+\s+\([a-z]+\)\s+(?:day|week|month|year)s?\b/i, // reversed: "30 (thirty) days"
   /\b\d+\s+(?:day|week|month|year)s?\b/i,
-  /\b(?:thirty|sixty|ninety)\s+(?:day|week|month|year)s?\b/i,
+  new RegExp(`\\b(?:${WORDNUM})\\s+(?:day|week|month|year)s?\\b`, 'i'), // "one year"
 ];
 
 export const retention: Detector = {

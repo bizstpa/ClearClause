@@ -50,6 +50,35 @@ describe('retention detector', () => {
     ).toHaveLength(0);
   });
 
+  it('reports a spelled-out duration as info', () => {
+    const matches = retention.detect('Account records are retained for one year after closure.');
+    expect(matches).toHaveLength(1);
+    expect(matches[0].severity).toBe('info');
+  });
+
+  it('reports a reversed digit/word duration as info', () => {
+    const matches = retention.detect('We keep the data for a grace period of 30 (thirty) days.');
+    expect(matches).toHaveLength(1);
+    expect(matches[0].severity).toBe('info');
+  });
+
+  it('flags criteria-based retention as the concern', () => {
+    expect(
+      retention.detect(
+        'We retain the data we collect for different periods of time depending on what it is and how we use it.',
+      )[0]?.severity,
+    ).toBe('caution');
+    expect(
+      retention.detect(
+        'To determine the appropriate retention period, we consider the amount, nature, and sensitivity of the personal information.',
+      )[0]?.severity,
+    ).toBe('caution');
+    expect(
+      retention.detect('The criteria used to determine our retention period is as follows.')[0]
+        ?.severity,
+    ).toBe('caution');
+  });
+
   it('does not flag period mentions with no retention context', () => {
     expect(retention.detect('The subscription renews every 12 months.')).toHaveLength(0);
   });

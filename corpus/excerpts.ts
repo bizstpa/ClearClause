@@ -77,6 +77,20 @@ Backup copies are deleted after six (6) months.`,
     },
   },
   {
+    name: 'retention-number-formats',
+    source: 'composite of spelled-out, reversed, and criteria-based retention phrasings',
+    text: `Account records are retained for one year after you close your account.
+We keep your verification data for a grace period of 30 (thirty) days.
+We retain the data we collect for different periods of time depending on what it is, how we use it, and how you configure your settings.`,
+    mustFind: {
+      retention: [
+        'retained for one year',
+        '30 (thirty) days',
+        'for different periods of time depending on what it is',
+      ],
+    },
+  },
+  {
     name: 'ccpa-category-list',
     source: 'composite of CCPA category-table lines',
     text: `Categories of Personal Information we collect:
