@@ -237,6 +237,23 @@ We work hard to protect you from unauthorized access, alteration, disclosure, or
     },
   },
   {
+    name: 'legal-process-judicial-order',
+    source: 'Telegram-style judicial-authorities disclosure plus composite security boilerplate',
+    text: `If Telegram receives a valid order from the relevant judicial authorities that confirms you are a suspect, we may disclose your IP address and phone number to the relevant authorities.
+We will disclose your information only in response to a lawful order issued by law enforcement authorities.
+We work hard to protect you from unauthorized access, alteration, disclosure, or destruction of the information we hold.`,
+    mustFind: {
+      third_party_sharing: [
+        'valid order from the relevant judicial authorities',
+        'in response to a lawful order',
+      ],
+    },
+    mustNotFind: {
+      // Security boilerplate names no legal demand — must not flag.
+      third_party_sharing: ['protect you from unauthorized access'],
+    },
+  },
+  {
     name: 'no-sharing-negation',
     source: 'composite no-sharing statement',
     text: 'We do not share your personal information with third parties, and we will never sell your data to anyone.',

@@ -41,7 +41,9 @@ const SHARE_VERB =
 const LEGAL_DEMAND =
   'subpoenas?|court\\s+orders?|search\\s+warrants?|warrants?|legal\\s+process|' +
   'legal\\s+(?:demand|request|proceeding|obligation)s?|lawful\\s+requests?|' +
-  'law\\s+enforcement|regulatory\\s+authorit\\w+|public\\s+authorit(?:y|ies)';
+  '(?:valid|lawful|binding)\\s+orders?|' +
+  'law\\s+enforcement|regulatory\\s+authorit\\w+|public\\s+authorit(?:y|ies)|' +
+  'judicial\\s+authorit\\w+|(?:relevant|government(?:al)?)\\s+authorit(?:y|ies)';
 
 const LEGAL_PROCESS = [
   // disclosure verb + a legal demand, as recipient or as the reason
