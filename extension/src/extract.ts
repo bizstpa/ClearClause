@@ -136,16 +136,31 @@ export function stripInPageNavigation(root: Document | Element): void {
  * render the same disclosure into more than one container (a visible copy plus
  * a print/SEO copy, repeated section intros), which doubles every flag the
  * engine reports. Mirrors the fetch helper's dedup: exact-block only, no fuzzy
- * matching, and short lines (headings, table cells) are left alone since they
- * legitimately repeat and carry little signal.
+ * matching.
+ *
+ * Long lines (>= 40 chars) collapse on first repeat. Short lines normally repeat
+ * harmlessly (headings, table cells) and are left alone — but a short string
+ * that recurs 3+ times verbatim is a structural label, not prose, so it too
+ * collapses to a single instance. Collapsing (not deleting) means a genuinely
+ * meaningful repeat still appears once.
  */
 export function dedupeLines(text: string): string {
+  const lines = text.split('\n');
+
+  // Count occurrences up front so a short line repeated many times can be
+  // recognized as a structural label even though it falls under the 40-char floor.
+  const counts = new Map<string, number>();
+  for (const line of lines) {
+    const key = line.trim();
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+
   const seen = new Set<string>();
-  return text
-    .split('\n')
+  return lines
     .filter((line) => {
       const key = line.trim();
-      if (key.length < 40) return true;
+      const collapsible = key.length >= 40 || (counts.get(key) ?? 0) >= 3;
+      if (!collapsible) return true;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;

@@ -131,6 +131,17 @@ describe('dedupeLines', () => {
 
     expect(lines.filter((l) => l === 'Yes')).toHaveLength(2);
   });
+
+  it('collapses a short line that recurs 3+ times to a single instance', () => {
+    const label = 'Information You Provide Us'; // ~25 chars, under the 40-char floor
+    const prose = 'You can opt out of marketing emails.';
+    const text = [...Array(20).fill(label), prose].join('\n');
+
+    const lines = dedupeLines(text).split('\n');
+
+    expect(lines.filter((l) => l === label)).toHaveLength(1);
+    expect(lines.filter((l) => l === prose)).toHaveLength(1); // one-off short prose untouched
+  });
 });
 
 // End-to-end: the cleaning pipeline as extractPolicyText composes it (minus
