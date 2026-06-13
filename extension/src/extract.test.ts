@@ -100,6 +100,24 @@ describe('extractAnalyzableText', () => {
     expect(text).toContain('We may share information with third-party advertising partners.');
   });
 
+  it('drops a styled fake-heading <p> repeated across sections but keeps a one-off short sentence', () => {
+    const body = bodyFrom(`
+      <p>Information You Provide Us</p>
+      <p>We collect your name and email address when you register an account.</p>
+      <p>Information You Provide Us</p>
+      <p>We sell your data.</p>
+      <p>Information You Provide Us</p>
+    `);
+
+    const lines = extractAnalyzableText(body).split('\n');
+
+    // Recurring, punctuation-less, short: structural label without heading markup.
+    expect(lines).not.toContain('Information You Provide Us');
+    // Short but a one-off real sentence (ends in a period): kept.
+    expect(lines).toContain('We sell your data.');
+    expect(lines).toContain('We collect your name and email address when you register an account.');
+  });
+
   it('puts block-level siblings on separate lines', () => {
     const body = bodyFrom(`
       <p>We retain personal data for as long as your account is active.</p>

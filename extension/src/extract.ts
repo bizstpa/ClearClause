@@ -52,21 +52,51 @@ function collectText(node: Node, out: string[]): void {
   }
 }
 
+/** Roughly the longest a visual subheader runs before it reads as prose. */
+const MAX_HEADING_LENGTH = 60;
+
+/** A line ending in sentence punctuation is a statement, not a bare label. */
+const ENDS_A_SENTENCE = /[.?!]$/;
+
+/**
+ * Drop visual subheaders that carry no heading markup. Some pages style a
+ * recurring label (e.g. Reddit's "Information You Provide Us") as an ordinary
+ * `<p>` rather than an `h1`–`h6`/ARIA heading, so `isHeading` can't catch it and
+ * the engine flags it once per section. A line is treated as such a heading only
+ * when all three hold: it is short, ends with no sentence punctuation, and recurs
+ * in the document. Conservative on purpose — a one-off short line, or a short
+ * line ending in a period, may be real content and is kept.
+ */
+function stripRecurringHeadings(lines: string[]): string[] {
+  const counts = new Map<string, number>();
+  for (const line of lines) counts.set(line, (counts.get(line) ?? 0) + 1);
+
+  return lines.filter((line) => {
+    const looksLikeHeading =
+      line.length < MAX_HEADING_LENGTH &&
+      !ENDS_A_SENTENCE.test(line) &&
+      (counts.get(line) ?? 0) >= 2;
+    return !looksLikeHeading;
+  });
+}
+
 /**
  * Flatten an extracted-content root to analyzable text. Block elements become
  * line breaks so the segmenter sees real sentence boundaries, and heading
  * elements (`h1`–`h6`, `role="heading"`) are dropped entirely — a lone heading
- * is page structure, not a sentence to analyze. Body paragraphs are untouched.
+ * is page structure, not a sentence to analyze. Recurring punctuation-less short
+ * blocks are dropped too, catching visual subheaders that lack heading markup.
+ * Body paragraphs are untouched.
  */
 export function extractAnalyzableText(root: Element): string {
   const out: string[] = [];
   collectText(root, out);
-  return out
+  const lines = out
     .join('')
     .split('\n')
     .map((line) => line.replace(/\s+/g, ' ').trim())
-    .filter((line) => line.length > 0)
-    .join('\n');
+    .filter((line) => line.length > 0);
+  return stripRecurringHeadings(lines).join('\n');
 }
 
 /** Resolve the owning document for either a Document or an Element root. */
