@@ -21,4 +21,16 @@ export const strings = {
     string
   >,
   emptyInput: 'Paste some policy text first.',
+
+  // Chrome extension popup. Same single-strings-module rule as the web app —
+  // nothing user-facing is hardcoded in the popup UI.
+  ext: {
+    tagline: 'See what this page’s privacy policy actually says.',
+    scanPage: 'Scan this page',
+    scanning: 'Reading the page…',
+    noTab: 'No active tab to scan.',
+    /** "{title}" → page title, "{count}" → extracted character count. */
+    scanned: 'Scanned “{title}” — {count} characters of text.',
+    extractError: 'Couldn’t read this page.',
+  },
 };

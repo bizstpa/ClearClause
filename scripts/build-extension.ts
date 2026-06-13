@@ -27,6 +27,24 @@ await build({
   },
 });
 
+// Pass 2: the extraction script. It is injected as a file via
+// chrome.scripting.executeScript, which runs files as classic scripts, so it
+// must be a single self-contained bundle (Readability inlined) — hence IIFE.
+// emptyOutDir:false so it lands alongside the popup from pass 1.
+await build({
+  configFile: false,
+  build: {
+    outDir,
+    emptyOutDir: false,
+    lib: {
+      entry: resolve(extDir, 'src/extract.ts'),
+      formats: ['iife'],
+      name: 'ClearClauseExtract',
+      fileName: () => 'extract.js',
+    },
+  },
+});
+
 // Static assets Vite doesn't process as part of the popup graph.
 mkdirSync(resolve(outDir, 'icons'), { recursive: true });
 cpSync(resolve(extDir, 'manifest.json'), resolve(outDir, 'manifest.json'));
