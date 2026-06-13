@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from 'vitest';
-import { stripInPageNavigation } from './extract';
+import { extractAnalyzableText, stripInPageNavigation } from './extract';
 
 /** Build a detached document body from an HTML string for DOM-level assertions. */
 function bodyFrom(html: string): HTMLElement {
@@ -70,5 +70,44 @@ describe('stripInPageNavigation', () => {
 
     expect(body.textContent ?? '').toContain('advertising partners');
     expect(body.textContent ?? '').toContain('We sell aggregated');
+  });
+});
+
+describe('extractAnalyzableText', () => {
+  it('does not emit a bare heading as an analyzable line but keeps the body sentence', () => {
+    const body = bodyFrom(`
+      <h2>Information You Provide Us</h2>
+      <p>We collect your name and email address when you register an account.</p>
+      <h2>Information You Provide Us</h2>
+    `);
+
+    const lines = extractAnalyzableText(body).split('\n');
+
+    expect(lines).not.toContain('Information You Provide Us');
+    expect(lines).toContain('We collect your name and email address when you register an account.');
+  });
+
+  it('drops ARIA heading-role elements too', () => {
+    const body = bodyFrom(`
+      <div role="heading" aria-level="2">How We Share Information</div>
+      <p>We may share information with third-party advertising partners.</p>
+    `);
+
+    const text = extractAnalyzableText(body);
+
+    expect(text).not.toContain('How We Share Information');
+    expect(text).toContain('We may share information with third-party advertising partners.');
+  });
+
+  it('puts block-level siblings on separate lines', () => {
+    const body = bodyFrom(`
+      <p>We retain personal data for as long as your account is active.</p>
+      <p>We sell de-identified data to analytics providers.</p>
+    `);
+
+    const lines = extractAnalyzableText(body).split('\n');
+
+    expect(lines).toContain('We retain personal data for as long as your account is active.');
+    expect(lines).toContain('We sell de-identified data to analytics providers.');
   });
 });
