@@ -80,13 +80,48 @@ function stripRecurringHeadings(lines: string[]): string[] {
   });
 }
 
+/** A continuation fragment opens with a lowercase letter; a new heading or
+ * sentence opens with a capital, digit, or bullet. */
+const STARTS_CONTINUATION = /^[a-z]/;
+
+/** A line that already closes a clause shouldn't absorb the next line. A colon
+ * is included alongside `.?!` so a list lead-in ("We collect:") keeps its items
+ * separate rather than swallowing them into a run-on. */
+const ENDS_A_CLAUSE = /[.?!:]$/;
+
+/**
+ * Rejoin a sentence severed across block boundaries. Converting block edges to
+ * line breaks splits one sentence into fragments when it spans nested or inline
+ * blocks — e.g. Reddit's "...we may record a session replay of" / "your activity
+ * on our services", which then displays as a truncated match. A line that does
+ * not end in clause-ending punctuation is merged with the following line only
+ * when that line opens with a lowercase letter, a strong signal it continues the
+ * same clause; a new heading or sentence opens with a capital and is left split.
+ * Conservative on purpose — capitalized continuations stay separate rather than
+ * risk fusing genuinely distinct sentences or pulling a heading into the prose
+ * above it. Merges chain, so a sentence broken into three blocks reassembles.
+ */
+function rejoinSeveredSentences(lines: string[]): string[] {
+  const out: string[] = [];
+  for (const line of lines) {
+    const prev = out[out.length - 1];
+    if (prev !== undefined && !ENDS_A_CLAUSE.test(prev) && STARTS_CONTINUATION.test(line)) {
+      out[out.length - 1] = `${prev} ${line}`;
+    } else {
+      out.push(line);
+    }
+  }
+  return out;
+}
+
 /**
  * Flatten an extracted-content root to analyzable text. Block elements become
  * line breaks so the segmenter sees real sentence boundaries, and heading
  * elements (`h1`–`h6`, `role="heading"`) are dropped entirely — a lone heading
  * is page structure, not a sentence to analyze. Recurring punctuation-less short
  * blocks are dropped too, catching visual subheaders that lack heading markup.
- * Body paragraphs are untouched.
+ * Finally, sentences severed mid-clause across block edges are stitched back so
+ * matches display whole. Body paragraphs are untouched.
  */
 export function extractAnalyzableText(root: Element): string {
   const out: string[] = [];
@@ -96,7 +131,7 @@ export function extractAnalyzableText(root: Element): string {
     .split('\n')
     .map((line) => line.replace(/\s+/g, ' ').trim())
     .filter((line) => line.length > 0);
-  return stripRecurringHeadings(lines).join('\n');
+  return rejoinSeveredSentences(stripRecurringHeadings(lines)).join('\n');
 }
 
 /** Resolve the owning document for either a Document or an Element root. */

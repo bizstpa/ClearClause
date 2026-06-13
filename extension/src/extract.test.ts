@@ -129,6 +129,66 @@ describe('extractAnalyzableText', () => {
     expect(lines).toContain('We retain personal data for as long as your account is active.');
     expect(lines).toContain('We sell de-identified data to analytics providers.');
   });
+
+  it('rejoins a sentence severed mid-clause across block boundaries', () => {
+    // A sentence whose tail sits in a separate block: the block edge becomes a
+    // line break, severing "...session replay of" from "your activity...".
+    const body = bodyFrom(`
+      <p>When using Reddit Ads, we may record a session replay of</p>
+      <div>your activity on our services to improve them.</div>
+    `);
+
+    const lines = extractAnalyzableText(body).split('\n');
+
+    expect(lines).toContain(
+      'When using Reddit Ads, we may record a session replay of your activity on our services to improve them.',
+    );
+    expect(lines).not.toContain('When using Reddit Ads, we may record a session replay of');
+  });
+
+  it('chains a sentence severed across three blocks back into one', () => {
+    const body = bodyFrom(`
+      <p>We collect device and network connection information when you access and</p>
+      <div>use our services, including from</div>
+      <span>third-party integrations you connect.</span>
+    `);
+
+    const lines = extractAnalyzableText(body).split('\n');
+
+    expect(lines).toContain(
+      'We collect device and network connection information when you access and use our services, including from third-party integrations you connect.',
+    );
+  });
+
+  it('keeps genuinely separate sentences separate (no over-rejoin into run-ons)', () => {
+    // First line ends in a period, and the next opens with a capital: two
+    // distinct statements must not fuse.
+    const body = bodyFrom(`
+      <p>We collect your email address when you register.</p>
+      <p>We retain it for the life of your account.</p>
+    `);
+
+    const lines = extractAnalyzableText(body).split('\n');
+
+    expect(lines).toContain('We collect your email address when you register.');
+    expect(lines).toContain('We retain it for the life of your account.');
+  });
+
+  it('does not pull a following capitalized line into a heading-less label', () => {
+    // A bare label (no terminal punctuation) followed by a capitalized sentence:
+    // capitalized continuations stay split, so the label never swallows the body.
+    const body = bodyFrom(`
+      <p>Information We Collect</p>
+      <p>We collect your name and email address.</p>
+    `);
+
+    const lines = extractAnalyzableText(body).split('\n');
+
+    expect(lines).toContain('We collect your name and email address.');
+    expect(lines).not.toContain(
+      'Information We Collect We collect your name and email address.',
+    );
+  });
 });
 
 describe('dedupeLines', () => {
