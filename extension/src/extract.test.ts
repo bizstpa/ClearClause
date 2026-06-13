@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from 'vitest';
+import { runDetectors } from '../../src/engine';
 import { dedupeLines, extractAnalyzableText, stripInPageNavigation } from './extract';
 
 /** Build a detached document body from an HTML string for DOM-level assertions. */
@@ -129,5 +130,58 @@ describe('dedupeLines', () => {
     const lines = dedupeLines(text).split('\n');
 
     expect(lines.filter((l) => l === 'Yes')).toHaveLength(2);
+  });
+});
+
+// End-to-end: the cleaning pipeline as extractPolicyText composes it (minus
+// Readability, which needs a full page to score) feeding the real engine, on
+// a Reddit-shaped fixture — a sidebar TOC, a subheader repeated many times,
+// and a verbatim-duplicated paragraph wrapped around the actual disclosures.
+describe('extraction pipeline → engine (Reddit-shaped fixture)', () => {
+  const duplicatedShare =
+    'We share information with third-party advertising partners and other affiliates of our business.';
+
+  function pipeline(html: string): string {
+    const body = new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html').body;
+    stripInPageNavigation(body);
+    return dedupeLines(extractAnalyzableText(body));
+  }
+
+  const html = `
+    <ul class="toc">
+      <li><a href="#provide">Information You Provide Us</a></li>
+      <li><a href="#collect">Information We Collect As You Use Our Services</a></li>
+      <li><a href="#share">How We Share Information</a></li>
+      <li><a href="#choices">Your Choices</a></li>
+    </ul>
+    <h2>Information You Provide Us</h2>
+    <p>We collect the information you provide directly, including your name and email address.</p>
+    <h2>Information We Collect As You Use Our Services</h2>
+    <p>We use session replay technology to record your interactions, including keystrokes and mouse movements.</p>
+    <p>We collect your precise geolocation when you grant the relevant device permission.</p>
+    <h2>Information You Provide Us</h2>
+    <h2>How We Share Information</h2>
+    <p>${duplicatedShare}</p>
+    <p>Disputes are resolved through binding arbitration under the EU-U.S. Data Privacy Framework.</p>
+    <p>${duplicatedShare}</p>
+    <h2>Information You Provide Us</h2>
+  `;
+
+  const text = pipeline(html);
+
+  it('drops the repeated subheader and the table-of-contents entries', () => {
+    expect(text.split('\n')).not.toContain('Information You Provide Us');
+    expect(text).not.toContain('Your Choices');
+  });
+
+  it('collapses the verbatim-duplicated disclosure to one line', () => {
+    expect(text.split('\n').filter((l) => l === duplicatedShare)).toHaveLength(1);
+  });
+
+  it('still surfaces the real disclosures to the engine', () => {
+    const found = new Set(runDetectors(text).filter((r) => r.found).map((r) => r.category));
+    expect(found.has('data_collection')).toBe(true); // session replay + geolocation
+    expect(found.has('third_party_sharing')).toBe(true);
+    expect(found.has('arbitration')).toBe(true);
   });
 });
